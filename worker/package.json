@@ -1,0 +1,25 @@
+{
+  "name": "sparkee-worker",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "cf dev",
+    "build": "cf build",
+    "release": "cf deploy",
+    "typecheck": "cf workers types && tsc --noEmit",
+    "db:migrate:local": "cf d1 migrations apply 00000000-0000-0000-0000-000000000000 --dir migrations --local --persist-to .wrangler/state"
+  },
+  "dependencies": {
+    "hono": "^4.13.13"
+  },
+  "devDependencies": {
+    "cf": "1.0.0-beta.18",
+    "typescript": "~6.0.2",
+    "wrangler": "^4.151.2"
+  }
+}

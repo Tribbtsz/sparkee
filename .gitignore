@@ -1,0 +1,60 @@
+# ============================================================
+#  Sparkee —— 不要提交的文件
+# ============================================================
+
+# ---- 密钥 / 本地配置 ----
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+!worker/.dev.vars.example
+secrets.json
+secrets.yaml
+secrets.yml
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+key.properties
+
+# ---- 数据库 / 本地数据 ----
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# ---- Worker / D1 本地状态 ----
+worker/.wrangler/
+worker/.cloudflare/
+worker/node_modules/
+worker/secrets.env
+worker/backup.sql
+worker/seed.sql
+
+# ---- 前端 ----
+web/node_modules/
+web/dist/
+web/.vite/
+web/*.tsbuildinfo
+web/.eslintcache
+
+# ---- 构建 / 发布产物 ----
+dist/
+
+# ---- 临时文件 ----
+tmp-workspace/
+
+# ---- IDE / 系统 ----
+.idea/
+*.iml
+*.iws
+.vscode/
+*.swp
+Thumbs.db
+Desktop.ini
+.DS_Store
+.openchamber/

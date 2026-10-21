@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="application-name" content="Sparkee" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Sparkee" />
+    <meta
+      name="description"
+      content="Sparkee —— 随手记下闪念的极简笔记应用。输入 #标签 自动归类，支持置顶、归档、全文搜索与日期筛选。"
+    />
+    <meta name="theme-color" content="#F7F8FA" />
+    <title>Sparkee</title>
+    <script>
+      // 首屏防闪烁：在样式生效前就把主题写到 <html>，否则「深色」会先亮一下再变暗。
+      // 与 src/theme.ts 共用 localStorage 键 sparkee.theme，逻辑保持等价。
+      ;(function () {
+        try {
+          var mode = localStorage.getItem('sparkee.theme') || 'system'
+          var dark =
+            mode === 'dark' ||
+            (mode !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          var t = dark ? 'dark' : 'light'
+          document.documentElement.dataset.theme = t
+          document.documentElement.style.colorScheme = t
+          var m = document.querySelector('meta[name="theme-color"]')
+          if (m) m.setAttribute('content', dark ? '#0D0E11' : '#F7F8FA')
+        } catch (e) {
+          /* localStorage 不可用（隐私模式等）时保持默认浅色 */
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

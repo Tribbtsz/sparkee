@@ -1,0 +1,301 @@
+@import 'tailwindcss';
+
+/* dark: 变体要认 <html data-theme="dark">，不能只认系统的 prefers-color-scheme。
+   否则用户手动选「暗」而系统还是浅色时，所有 dark: 都不生效 ——
+   比如侧栏选中项的文字会保持深色，落在暗底上几乎看不见。 */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* ==========================================================================
+   设计 token
+   --------------------------------------------------------------------------
+   颜色全部走「运行时 CSS 变量 + @theme inline」，这样同一套 utility class
+   （bg-card / text-ink / border-line …）在浅色和深色下自动取到不同的值，
+   主题跟随系统（prefers-color-scheme），不需要 dark: 前缀逐处写。
+   ========================================================================== */
+
+:root {
+  /* 浅色 */
+  --c-scaffold: #f7f8fa;
+  --c-surface: #ffffff;
+  --c-surface-2: #edeff3;
+  --c-sidebar: #f4f5f8;
+  --c-card: #ffffff;
+  --c-card-pinned: #fafde8;
+  --c-composer: #ffffff;
+  --c-line: rgba(0, 0, 0, 0.08);
+  --c-ink: #222222;
+  --c-ink-2: rgba(0, 0, 0, 0.45);
+  --c-ink-3: rgba(0, 0, 0, 0.38);
+  --c-tag: #6b8000;
+  --c-tag-select: #ebf686;
+  --c-brand-bg: #d4f322;
+  --c-brand-fg: #1b2000;
+  --c-danger: #ba1a1a;
+
+  /* 柠黄 */
+  --c-lime: #ceea00; /* 侧栏高亮 / 激活 / 主按钮 */
+  --c-lime-select: #e5f555; /* 选中项底色 */
+  --c-lime-on: #1b2000; /* 实心柠黄底上的文字色（两种主题都一样） */
+  --c-lime-fg: #1b2000; /* 选中项的文字/图标色 */
+  --c-lime-soft: rgba(212, 243, 34, 0.3); /* 快捷胶囊底色 */
+  --c-lime-quick: #5b6e00; /* 快捷胶囊上的文字色 */
+  --c-lime-icon: #748c00; /* 卡片置顶图钉 */
+
+  /* 逐级武装 */
+  --c-armed-warn: #a85f00;
+  --c-armed-danger: #c62828;
+  --c-armed-warn-soft: rgba(168, 95, 0, 0.14);
+  --c-armed-danger-soft: rgba(198, 40, 40, 0.14);
+
+  --c-scrollbar: rgba(0, 0, 0, 0.18);
+
+  --sh-card: 0 3px 6px rgba(0, 0, 0, 0.03);
+  --sh-composer: 0 4px 10px rgba(0, 0, 0, 0.05);
+  --sh-dialog: 0 12px 32px rgba(0, 0, 0, 0.16);
+}
+
+/* 深色 token。由 JS 把「跟随系统 / 浅色 / 深色」解析成 light|dark 后写在
+   <html data-theme> 上（跟随系统时也会解析成具体值），所以这里不用媒体查询 ——
+   否则「系统是深色但我手动选了浅色」会被媒体查询盖掉。 */
+:root[data-theme='dark'] {
+  --c-scaffold: #0d0e11;
+  --c-surface: #141619;
+  --c-surface-2: #1f2228;
+  --c-sidebar: #141619;
+  --c-card: #191b1f;
+  --c-card-pinned: #22262c;
+  --c-composer: #1e2126;
+  --c-line: rgba(255, 255, 255, 0.12);
+  --c-ink: #eeeeee;
+  --c-ink-2: rgba(255, 255, 255, 0.54);
+  --c-ink-3: rgba(255, 255, 255, 0.38);
+  --c-tag: #e4ff42;
+  --c-tag-select: rgba(206, 234, 0, 0.12);
+  --c-brand-bg: rgba(206, 234, 0, 0.18);
+  --c-brand-fg: #ceea00;
+  --c-danger: #ffb4ab;
+
+  --c-lime: #ceea00;
+  --c-lime-select: rgba(206, 234, 0, 0.15);
+  --c-lime-fg: #ceea00;
+  --c-lime-soft: rgba(206, 234, 0, 0.15);
+  --c-lime-quick: #e4ff42;
+  --c-lime-icon: #ceea00;
+
+  --c-armed-warn: #ffd429;
+  --c-armed-danger: #ff6b6b;
+  --c-armed-warn-soft: rgba(255, 212, 41, 0.22);
+  --c-armed-danger-soft: rgba(255, 107, 107, 0.22);
+
+  --c-scrollbar: rgba(255, 255, 255, 0.18);
+
+  --sh-card: 0 3px 6px rgba(0, 0, 0, 0.15);
+  --sh-composer: 0 4px 10px rgba(0, 0, 0, 0.22);
+  --sh-dialog: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* 颜色 token 需要 inline：utility 里直接内联 var(--c-xxx)，才能跟着上面的媒体查询切换。 */
+@theme inline {
+  --color-scaffold: var(--c-scaffold);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-sidebar: var(--c-sidebar);
+  --color-card: var(--c-card);
+  --color-card-pinned: var(--c-card-pinned);
+  --color-composer: var(--c-composer);
+  --color-line: var(--c-line);
+  --color-ink: var(--c-ink);
+  --color-ink-2: var(--c-ink-2);
+  --color-ink-3: var(--c-ink-3);
+  --color-tag: var(--c-tag);
+  --color-tag-select: var(--c-tag-select);
+  --color-brand-bg: var(--c-brand-bg);
+  --color-brand-fg: var(--c-brand-fg);
+  --color-danger: var(--c-danger);
+  --color-lime: var(--c-lime);
+  --color-lime-select: var(--c-lime-select);
+  --color-lime-on: var(--c-lime-on);
+  --color-lime-fg: var(--c-lime-fg);
+  --color-lime-soft: var(--c-lime-soft);
+  --color-lime-quick: var(--c-lime-quick);
+  --color-lime-icon: var(--c-lime-icon);
+  --color-lime-seed: #d4f322;
+
+  --shadow-card: var(--sh-card);
+  --shadow-composer: var(--sh-composer);
+  --shadow-dialog: var(--sh-dialog);
+
+  --radius-chip: 8px;
+  --radius-capsule: 10px;
+  --radius-btn: 12px;
+  --radius-card: 18px;
+  --radius-composer: 20px;
+}
+
+@theme {
+  --font-sans:
+    'PingFang SC', 'Microsoft YaHei', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+}
+
+@layer base {
+  html,
+  body,
+  #app {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--c-scaffold);
+    color: var(--c-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+  }
+
+  /* 全局关掉点击高亮（水波纹），移动端才不显得脏 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    scrollbar-width: thin;
+    scrollbar-color: var(--c-scrollbar) transparent;
+  }
+
+  input,
+  textarea,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  ::placeholder {
+    color: var(--c-ink-2);
+    opacity: 1;
+  }
+}
+
+@layer components {
+  /* 移动端安全区（刘海 / 手势条）由这层内边距处理；桌面浏览器 env() 全是 0，无副作用。 */
+  .app-shell {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+
+  /* 顶部细进度条：切 tab / 换筛选这类「界面内刷新」的加载反馈。
+     不占高度、不推内容，只覆盖在最上面一条。 */
+  .loading-bar {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 3px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .loading-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 38%;
+    border-radius: 999px;
+    background: var(--c-lime);
+    animation: loading-slide 1.05s ease-in-out infinite;
+  }
+
+  /* 卡片瀑布流：CSS 多列，不引任何 JS 布局库 */
+  .masonry {
+    column-gap: 18px;
+  }
+
+  .masonry > * {
+    break-inside: avoid;
+    margin: 0 0 18px;
+  }
+
+  /* 卡片入场：淡入 + 上浮，位移 12%，340ms ease-out。
+     只对"新出现"的卡片加这个 class，置顶/归档/编辑刷新不会重放。 */
+  .card-enter {
+    animation: card-in 340ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+  }
+
+  .toast-enter {
+    animation: toast-in 160ms ease-out both;
+  }
+
+  .drawer-enter {
+    animation: drawer-in 200ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+  }
+
+  .pop-in {
+    animation: pop-in 160ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes loading-slide {
+  0% {
+    left: -40%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-enter,
+  .toast-enter,
+  .drawer-enter,
+  .pop-in {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
+
+  /* 进度条不能冻住（冻住就等于看不见），只能放慢 */
+  .loading-bar::before {
+    animation-duration: 3s;
+  }
+}

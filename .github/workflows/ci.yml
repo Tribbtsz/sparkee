@@ -1,0 +1,79 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      WRANGLER_SEND_METRICS: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: |
+            web/pnpm-lock.yaml
+            worker/pnpm-lock.yaml
+
+      - name: Install web dependencies
+        working-directory: web
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web
+        working-directory: web
+        run: pnpm build
+
+      - name: Install worker dependencies
+        working-directory: worker
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck worker
+        working-directory: worker
+        run: pnpm typecheck
+
+      # cf dev 的本地 D1 在 .wrangler/state/v3；--persist-to 指向同一处。
+      - name: Apply D1 migrations (local)
+        working-directory: worker
+        run: pnpm db:migrate:local
+
+      - name: Write dev secret
+        working-directory: worker
+        run: printf 'SPARKEE_TOKEN=ci-token\n' > .dev.vars
+
+      - name: Start cf dev
+        working-directory: worker
+        run: |
+          pnpm dev > "$RUNNER_TEMP/cf-dev.log" 2>&1 &
+          for i in $(seq 1 90); do
+            if curl -sf http://127.0.0.1:8787/api/health >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          echo "cf dev 没有在 90 秒内就绪"
+          cat "$RUNNER_TEMP/cf-dev.log"
+          exit 1
+
+      - name: End-to-end API test
+        working-directory: web
+        run: node scripts/e2e-api.ts
+        env:
+          SPARKEE_TEST_BASE: http://127.0.0.1:8787
+          SPARKEE_TEST_TOKEN: ci-token
+
+      - name: Upload cf dev log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cf-dev-log
+          path: ${{ runner.temp }}/cf-dev.log
