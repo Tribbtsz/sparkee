@@ -10,7 +10,7 @@ declare const process: { env: Record<string, string | undefined> }
 //   SPARKEE_D1_ID          远程部署必填；本地默认用一个占位 UUID
 //   SPARKEE_DOMAIN         自定义域名；不填则只部署到 workers.dev
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim()
-const d1Id = process.env.SPARKEE_D1_ID?.trim() || '00000000-0000-0000-0000-000000000000'
+const d1Id = process.env.SPARKEE_D1_ID?.trim() || '11111111-1111-4111-8111-111111111111'
 const domain = process.env.SPARKEE_DOMAIN?.trim()
 
 export default defineConfig({

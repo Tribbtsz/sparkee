@@ -12,7 +12,7 @@
     "build": "cf build",
     "release": "cf deploy",
     "typecheck": "cf workers types && tsc --noEmit",
-    "db:migrate:local": "cf d1 migrations apply 00000000-0000-0000-0000-000000000000 --dir migrations --local --persist-to .wrangler/state"
+    "db:migrate:local": "cf d1 migrations apply 11111111-1111-4111-8111-111111111111 --dir migrations --local --persist-to .wrangler/state"
   },
   "dependencies": {
     "hono": "^4.13.13"
