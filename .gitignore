@@ -6,6 +6,7 @@
 .env
 .env.*
 !.env.example
+!worker/.env.example
 .dev.vars
 .dev.vars.*
 !worker/.dev.vars.example
@@ -46,6 +47,7 @@ web/.eslintcache
 dist/
 
 # ---- 临时文件 ----
+*.log
 tmp-workspace/
 
 # ---- IDE / 系统 ----
