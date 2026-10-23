@@ -1,7 +1,14 @@
 {
-  "name": "web",
+  "name": "sparkee-web",
   "private": true,
   "version": "1.0.0",
+  "description": "Sparkee 前端：Preact + Vite + TailwindCSS 的 PWA",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tribbtsz/sparkee.git",
+    "directory": "web"
+  },
   "type": "module",
   "packageManager": "pnpm@10.34.5",
   "engines": {

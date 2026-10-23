@@ -2,6 +2,13 @@
   "name": "sparkee-worker",
   "private": true,
   "version": "1.0.0",
+  "description": "Sparkee 后端：Cloudflare Workers + D1 + Hono",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tribbtsz/sparkee.git",
+    "directory": "worker"
+  },
   "type": "module",
   "packageManager": "pnpm@10.34.5",
   "engines": {

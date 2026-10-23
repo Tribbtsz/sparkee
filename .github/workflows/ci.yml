@@ -3,6 +3,12 @@ name: ci
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+# 同一分支的新推送取消旧任务，省 runner 也省等待
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -10,6 +16,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       WRANGLER_SEND_METRICS: false
     steps:
@@ -77,3 +84,4 @@ jobs:
         with:
           name: cf-dev-log
           path: ${{ runner.temp }}/cf-dev.log
+          retention-days: 7

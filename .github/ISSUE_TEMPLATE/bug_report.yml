@@ -1,0 +1,58 @@
+name: Bug 报告
+description: 功能不工作、报错、显示异常
+title: "[bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提之前请确认：用的是 `main` 的最新提交；内容里没有口令、真实域名、账号 ID。
+        如果怀疑是安全问题，请走 [SECURITY.md](https://github.com/Tribbtsz/sparkee/blob/main/SECURITY.md) 里的私密渠道，不要开公开 issue。
+  - type: textarea
+    id: what
+    attributes:
+      label: 发生了什么
+      description: 实际行为，以及你期望的行为
+      placeholder: 点开待办本后列表顺序不对，期望……
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开 ……
+        2. 点击 ……
+        3. 看到 ……
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: 在哪运行
+      options:
+        - 本地 cf dev
+        - 部署在 Cloudflare 上
+        - 两者都有
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本或提交
+      description: 部署的 Worker 版本，或 `git rev-parse --short HEAD` 的结果
+  - type: textarea
+    id: env
+    attributes:
+      label: 环境
+      description: 浏览器、操作系统、Node / pnpm 版本；相关的后端日志（记得去掉口令）
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 确认
+      options:
+        - label: 已在 `main` 最新提交上复现
+          required: true
+        - label: 内容里没有口令、域名、账号 ID 等敏感信息
+          required: true
