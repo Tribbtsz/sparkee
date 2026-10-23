@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "cf": "1.0.0-beta.18",
-    "typescript": "~6.0.2",
+    "typescript": "~7.0.2",
     "wrangler": "^4.151.2"
   }
 }
