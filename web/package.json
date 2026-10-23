@@ -21,7 +21,7 @@
     "e2e": "node scripts/e2e-api.ts"
   },
   "dependencies": {
-    "preact": "^10.29.8"
+    "preact": "^11.0.1"
   },
   "devDependencies": {
     "@material-symbols/svg-400": "^0.48.0",
