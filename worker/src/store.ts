@@ -134,7 +134,10 @@ export async function listNotes(
 
   sql += ' ORDER BY is_pinned DESC, updated_at DESC, id DESC'
 
-  const { results } = await db.prepare(sql).bind(...args).all<NoteRow>()
+  const { results } = await db
+    .prepare(sql)
+    .bind(...args)
+    .all<NoteRow>()
   return results.map(toNote)
 }
 
@@ -318,7 +321,10 @@ export async function renameTodoFolder(
 
 /** 删除文件夹并级联删掉它的全部待办（未分类的待办不受影响）。 */
 export async function deleteTodoFolder(db: D1Database, id: number): Promise<void> {
-  const exists = await db.prepare('SELECT id FROM todo_folders WHERE id = ?').bind(id).first<{ id: number }>()
+  const exists = await db
+    .prepare('SELECT id FROM todo_folders WHERE id = ?')
+    .bind(id)
+    .first<{ id: number }>()
   if (!exists) throw new NotFoundError('folder not found')
 
   // batch 是一个事务：要么两个删除都成功，要么都不生效。
@@ -400,7 +406,9 @@ export async function updateTodo(
   patch: { content?: string; isDone?: boolean },
 ): Promise<Todo> {
   const row = await db
-    .prepare('SELECT id, folder_id, content, is_done, created_at, updated_at FROM todos WHERE id = ?')
+    .prepare(
+      'SELECT id, folder_id, content, is_done, created_at, updated_at FROM todos WHERE id = ?',
+    )
     .bind(id)
     .first<TodoRow>()
   if (!row) throw new NotFoundError('todo not found')

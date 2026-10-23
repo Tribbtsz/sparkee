@@ -28,16 +28,17 @@ key.properties
 *.sqlite
 *.sqlite3
 
+# ---- 依赖 ----
+node_modules/
+
 # ---- Worker / D1 本地状态 ----
 worker/.wrangler/
 worker/.cloudflare/
-worker/node_modules/
 worker/secrets.env
 worker/backup.sql
 worker/seed.sql
 
 # ---- 前端 ----
-web/node_modules/
 web/dist/
 web/.vite/
 web/*.tsbuildinfo

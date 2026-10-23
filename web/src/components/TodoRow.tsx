@@ -50,6 +50,8 @@ export function TodoRow(props: Props) {
       el.setSelectionRange(el.value.length, el.value.length)
       autoGrow(el, 320)
     })
+    // 只依赖 editing：编辑过程中 todo.content 变了也不能重置草稿
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editing])
 
   useEffect(() => {
@@ -128,11 +130,10 @@ export function TodoRow(props: Props) {
 
   return (
     <article
-      class={cx(
-        'rounded-card bg-card px-4 pt-3 pb-3.5 shadow-card',
-        entering && 'card-enter',
-      )}
-      style={entering ? { animationDelay: `${Math.min(index, MAX_STAGGER) * STAGGER_MS}ms` } : undefined}
+      class={cx('rounded-card bg-card px-4 pt-3 pb-3.5 shadow-card', entering && 'card-enter')}
+      style={
+        entering ? { animationDelay: `${Math.min(index, MAX_STAGGER) * STAGGER_MS}ms` } : undefined
+      }
     >
       <div class="flex items-start gap-3">
         {/* ---- 勾选框 ---- */}

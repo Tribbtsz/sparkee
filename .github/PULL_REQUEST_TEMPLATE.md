@@ -12,6 +12,7 @@
 
 ## 自查
 
+- [ ] `pnpm lint` 与 `pnpm format:check` 通过
 - [ ] `cd web && pnpm build` 通过
 - [ ] `cd worker && pnpm typecheck` 通过
 - [ ] e2e 跑过（或说明为什么不需要）

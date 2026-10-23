@@ -81,7 +81,11 @@ export function Composer({ onSave }: Props) {
 
       <div class="mt-3.5 flex flex-wrap items-center justify-between gap-y-2.5">
         <div class="flex flex-wrap items-center gap-2">
-          <QuickChip icon={<Today size={13} />} label="今日" onClick={() => insert(`#${todayStr()} `)} />
+          <QuickChip
+            icon={<Today size={13} />}
+            label="今日"
+            onClick={() => insert(`#${todayStr()} `)}
+          />
           <QuickChip
             icon={<Schedule size={13} />}
             label="此刻"

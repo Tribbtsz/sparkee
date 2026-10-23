@@ -45,6 +45,7 @@
 │   ├── .env.example          # 部署用的本地配置模板（复制成 .env）
 │   └── package.json
 ├── .github/                  # CI、issue / PR 模板、dependabot
+├── package.json              # 仓库根的 lint / format 工具与脚本
 ├── CONTRIBUTING.md           # 怎么参与
 ├── SECURITY.md               # 威胁模型与漏洞上报
 ├── CODE_OF_CONDUCT.md
@@ -191,6 +192,17 @@ cf d1 time-travel restore "$SPARKEE_D1_ID" --bookmark <bookmark>
 不需要自建定时快照。
 
 ## 测试
+
+代码风格由仓库根的 ESLint + Prettier 管：
+
+```bash
+# 在仓库根目录
+pnpm install
+pnpm lint           # eslint，开了 --max-warnings 0
+pnpm format:check   # 只检查；`pnpm format` 直接改写
+```
+
+功能测试分两层：
 
 ```bash
 cd worker

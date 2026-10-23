@@ -181,9 +181,7 @@ function ThemeTabs({ value, onChange }: { value: ThemeMode; onChange: (m: ThemeM
             title={option.title}
             class={cx(
               'h-8 min-w-0 flex-1 cursor-pointer truncate rounded-[7px] text-[12.5px] whitespace-nowrap',
-              active
-                ? 'bg-lime font-bold text-lime-on'
-                : 'font-medium text-ink-2 hover:text-ink',
+              active ? 'bg-lime font-bold text-lime-on' : 'font-medium text-ink-2 hover:text-ink',
             )}
             onClick={() => onChange(option.value)}
           >

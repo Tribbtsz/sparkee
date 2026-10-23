@@ -87,8 +87,8 @@ export function SettingsDialog({ onClose, onSaved }: Props) {
         <h2 class="m-0 text-[18px] font-semibold text-ink">服务器配置</h2>
 
         <p class="mt-3 mb-0 text-[14px] leading-relaxed text-ink-2">
-          默认走同源，不需要填；本地开发可填 http://127.0.0.1:8787（cf dev）。
-          填别的实例时请用 HTTPS 地址。
+          默认走同源，不需要填；本地开发可填 http://127.0.0.1:8787（cf dev）。 填别的实例时请用
+          HTTPS 地址。
         </p>
 
         <label class="mt-3.5 block">
@@ -160,9 +160,7 @@ export function SettingsDialog({ onClose, onSaved }: Props) {
         {testState !== 'idle' && testMessage !== '' && (
           <p
             class={`mt-3 mb-0 text-[12px] leading-relaxed ${
-              testState === 'ok'
-                ? 'text-[#3F6B00] dark:text-lime'
-                : 'text-danger'
+              testState === 'ok' ? 'text-[#3F6B00] dark:text-lime' : 'text-danger'
             }`}
           >
             {testMessage}

@@ -27,6 +27,10 @@ pnpm dev                                          # http://127.0.0.1:8787
 CI 跑同一套，本地先过一遍能省一轮往返：
 
 ```bash
+# 仓库根目录：风格检查
+pnpm lint
+pnpm format:check
+
 cd web && pnpm build                                        # tsc -b && vite build
 cd ../worker && pnpm typecheck                              # cf workers types && tsc
 cd ../web && SPARKEE_TEST_BASE=http://127.0.0.1:8787 \
@@ -38,6 +42,7 @@ PowerShell 里把续行反斜杠换成反引号，或直接写成一行。
 ## 代码约定
 
 - **依赖克制**：前端只有 Preact，后端只有 Hono。新依赖要能说清为什么非它不可。
+- **格式统一**：仓库根的 Prettier 管缩进、引号、行宽（100），提交前跑 `pnpm format`；ESLint 只留真问题（`pnpm lint`，warning 也会失败）。`web/src/icons.tsx` 是生成的，Markdown 按原文排版，两者都不参与格式化。
 - **前端样式走 token**：颜色、圆角、间距都用 `web/src/style.css` 里的 CSS 变量和 Tailwind 语义类（`bg-card` / `text-ink` / `border-line`…），不要写死色值，也不要逐处写 `dark:`。
 - **后端分层**：D1 语句集中在 `worker/src/store.ts`，路由只做参数校验和组装响应。
 - **时间**：数据库一律存 UTC ISO 字符串（`YYYY-MM-DDTHH:MM:SS.sssZ`），按日期筛选的时区换算只在查询层做。

@@ -10,7 +10,19 @@ import {
   renameTodoFolder,
   updateTodo,
 } from '../api'
-import { Add, Check, Checklist, CreateNewFolder, Delete, Edit, Folder, Menu, Refresh, Sort, Tune } from '../icons'
+import {
+  Add,
+  Check,
+  Checklist,
+  CreateNewFolder,
+  Delete,
+  Edit,
+  Folder,
+  Menu,
+  Refresh,
+  Sort,
+  Tune,
+} from '../icons'
 import { usePullToRefresh } from '../pullToRefresh'
 import type { Todo, TodoFolder } from '../types'
 import { autoGrow, cx } from '../util'
@@ -148,10 +160,7 @@ export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings 
    * 执行带错误提示的写操作，完成后刷新列表与侧栏计数。
    * rethrow 用于内容编辑：失败时必须让 TodoRow 保持编辑态，不能吞掉异常。
    */
-  async function runAction(
-    action: () => Promise<unknown>,
-    opts: { rethrow?: boolean } = {},
-  ) {
+  async function runAction(action: () => Promise<unknown>, opts: { rethrow?: boolean } = {}) {
     try {
       await action()
     } catch (e) {
@@ -294,13 +303,20 @@ export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings 
       <div class="shrink-0 border-b border-line">
         <div class="flex items-center gap-2 overflow-x-auto px-3 py-2.5 md:px-7">
           <FolderTab label="全部" selected={sel === 'all'} onClick={() => chooseFolder('all')} />
-          <FolderTab label="未分类" selected={sel === 'none'} onClick={() => chooseFolder('none')} />
+          <FolderTab
+            label="未分类"
+            selected={sel === 'none'}
+            onClick={() => chooseFolder('none')}
+          />
 
           {folders.map((f) => {
             const selected = sel === f.id
             if (renameId === f.id) {
               return (
-                <span key={f.id} class="inline-flex h-8 shrink-0 items-center gap-1 rounded-capsule bg-surface-2 px-2">
+                <span
+                  key={f.id}
+                  class="inline-flex h-8 shrink-0 items-center gap-1 rounded-capsule bg-surface-2 px-2"
+                >
                   <input
                     ref={renameRef}
                     value={renameName}
@@ -435,111 +451,111 @@ export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings 
           style={{
             transform: pull > 0 ? `translateY(${pull}px)` : undefined,
             // 手指还在拖时不能有过渡，否则跟不上手；松手后再补一段回弹动画
-            transition: dragging
-              ? 'none'
-              : 'transform 220ms cubic-bezier(0.215, 0.61, 0.355, 1)',
+            transition: dragging ? 'none' : 'transform 220ms cubic-bezier(0.215, 0.61, 0.355, 1)',
           }}
         >
           {/* 内容区宽度 / 内边距与闪念流完全一致（max-w-[1400px] + px-6 + pt-5 pb-6） */}
           <div class="mx-auto w-full max-w-[1400px] px-6 pt-5 pb-6">
-          {loading ? (
-            <div class="grid h-[60vh] place-items-center">
-              <Spinner size={36} width={3} />
-            </div>
-          ) : error !== null ? (
-            <div class="flex flex-col items-center px-6 py-20 text-center">
-              <h2 class="mt-4 mb-0 text-[18px] font-medium text-ink">加载待办失败</h2>
-              <p class="mt-2 mb-0 max-w-[560px] text-[13px] leading-relaxed break-words text-ink-2">
-                {error}
-              </p>
-              <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
-                <button
-                  type="button"
-                  class="inline-flex cursor-pointer items-center gap-2 rounded-btn bg-lime px-4 py-2.5 text-[14px] font-bold text-lime-on hover:brightness-95"
-                  onClick={() => void load({ showSpinner: true })}
-                >
-                  <Refresh size={18} />
-                  重试
-                </button>
-                <button
-                  type="button"
-                  class="inline-flex cursor-pointer items-center gap-2 rounded-btn border border-line px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
-                  onClick={onOpenSettings}
-                >
-                  <Tune size={18} />
-                  服务器设置
-                </button>
+            {loading ? (
+              <div class="grid h-[60vh] place-items-center">
+                <Spinner size={36} width={3} />
               </div>
-            </div>
-          ) : (
-            <>
-              {/* 新建待办：回车保存，Shift+回车换行 */}
-              <section class="rounded-composer bg-composer px-5 py-4 shadow-composer">
-                <textarea
-                  ref={inputRef}
-                  value={text}
-                  rows={1}
-                  spellcheck={false}
-                  placeholder="添加一条待办..."
-                  enterkeyhint="done"
-                  class="block max-h-[180px] min-h-[48px] w-full resize-none overflow-y-auto border-0 bg-transparent p-0 text-[16.5px] leading-[1.5] text-ink outline-none"
-                  onInput={(e) => {
-                    setText(e.currentTarget.value)
-                    autoGrow(e.currentTarget, 180)
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key !== 'Enter' || e.shiftKey) return
-                    if (e.isComposing || e.keyCode === 229) return
-                    e.preventDefault()
-                    void addTodo()
-                  }}
-                />
-                <div class="mt-3.5 flex items-center justify-between gap-2">
-                  <span class="min-w-0 truncate text-[12px] text-ink-3">
-                    新建到：{targetLabel}
-                  </span>
+            ) : error !== null ? (
+              <div class="flex flex-col items-center px-6 py-20 text-center">
+                <h2 class="mt-4 mb-0 text-[18px] font-medium text-ink">加载待办失败</h2>
+                <p class="mt-2 mb-0 max-w-[560px] text-[13px] leading-relaxed break-words text-ink-2">
+                  {error}
+                </p>
+                <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
                   <button
                     type="button"
-                    disabled={saving || text.trim() === ''}
-                    class="inline-flex cursor-pointer items-center gap-1.5 rounded-btn bg-lime px-4 py-2.5 text-[14px] font-bold text-lime-on hover:brightness-95 disabled:cursor-default disabled:opacity-50"
-                    onClick={() => void addTodo()}
+                    class="inline-flex cursor-pointer items-center gap-2 rounded-btn bg-lime px-4 py-2.5 text-[14px] font-bold text-lime-on hover:brightness-95"
+                    onClick={() => void load({ showSpinner: true })}
                   >
-                    {saving ? <Spinner size={14} width={2} /> : <Add size={16} />}
-                    {saving ? '保存中' : '添加'}
+                    <Refresh size={18} />
+                    重试
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex cursor-pointer items-center gap-2 rounded-btn border border-line px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                    onClick={onOpenSettings}
+                  >
+                    <Tune size={18} />
+                    服务器设置
                   </button>
                 </div>
-              </section>
+              </div>
+            ) : (
+              <>
+                {/* 新建待办：回车保存，Shift+回车换行 */}
+                <section class="rounded-composer bg-composer px-5 py-4 shadow-composer">
+                  <textarea
+                    ref={inputRef}
+                    value={text}
+                    rows={1}
+                    spellcheck={false}
+                    placeholder="添加一条待办..."
+                    enterkeyhint="done"
+                    class="block max-h-[180px] min-h-[48px] w-full resize-none overflow-y-auto border-0 bg-transparent p-0 text-[16.5px] leading-[1.5] text-ink outline-none"
+                    onInput={(e) => {
+                      setText(e.currentTarget.value)
+                      autoGrow(e.currentTarget, 180)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Enter' || e.shiftKey) return
+                      if (e.isComposing || e.keyCode === 229) return
+                      e.preventDefault()
+                      void addTodo()
+                    }}
+                  />
+                  <div class="mt-3.5 flex items-center justify-between gap-2">
+                    <span class="min-w-0 truncate text-[12px] text-ink-3">
+                      新建到：{targetLabel}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={saving || text.trim() === ''}
+                      class="inline-flex cursor-pointer items-center gap-1.5 rounded-btn bg-lime px-4 py-2.5 text-[14px] font-bold text-lime-on hover:brightness-95 disabled:cursor-default disabled:opacity-50"
+                      onClick={() => void addTodo()}
+                    >
+                      {saving ? <Spinner size={14} width={2} /> : <Add size={16} />}
+                      {saving ? '保存中' : '添加'}
+                    </button>
+                  </div>
+                </section>
 
-              <div class="h-[18px]" />
+                <div class="h-[18px]" />
 
-              {todos.length === 0 ? (
-                <div class="flex flex-col items-center py-[60px] text-center">
-                  <Checklist size={72} class="text-lime/60" />
-                  <p class="mt-4 mb-0 text-[17px] font-medium text-ink">{emptyText}</p>
-                </div>
-              ) : (
-                <div class="flex flex-col gap-[18px]">
-                  {todos.map((t, index) => (
-                    <TodoRow
-                      key={t.id}
-                      todo={t}
-                      index={index}
-                      entering={entering.has(t.id)}
-                      editing={editingId === t.id}
-                      folderName={showFolderLabel ? nameOfFolder(t.folder_id) : null}
-                      onStartEdit={() => setEditingId(t.id)}
-                      onStopEdit={() => setEditingId(null)}
-                      onToggleDone={() => runAction(() => updateTodo(t.id, { is_done: !t.is_done }))}
-                      onUpdateContent={(content) =>
-                        runAction(() => updateTodo(t.id, { content }), { rethrow: true })
-                      }
-                      onDelete={() => runAction(() => deleteTodo(t.id))}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
+                {todos.length === 0 ? (
+                  <div class="flex flex-col items-center py-[60px] text-center">
+                    <Checklist size={72} class="text-lime/60" />
+                    <p class="mt-4 mb-0 text-[17px] font-medium text-ink">{emptyText}</p>
+                  </div>
+                ) : (
+                  <div class="flex flex-col gap-[18px]">
+                    {todos.map((t, index) => (
+                      <TodoRow
+                        key={t.id}
+                        todo={t}
+                        index={index}
+                        entering={entering.has(t.id)}
+                        editing={editingId === t.id}
+                        folderName={showFolderLabel ? nameOfFolder(t.folder_id) : null}
+                        onStartEdit={() => setEditingId(t.id)}
+                        onStopEdit={() => setEditingId(null)}
+                        onToggleDone={() =>
+                          runAction(() => updateTodo(t.id, { is_done: !t.is_done }))
+                        }
+                        onUpdateContent={(content) =>
+                          runAction(() => updateTodo(t.id, { content }), { rethrow: true })
+                        }
+                        onDelete={() => runAction(() => deleteTodo(t.id))}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -597,7 +613,11 @@ function ArmedDeleteFolder({ name, onClick }: { name: string; onClick: () => voi
   }
 
   const title =
-    arm >= 2 ? '再点一次将删除文件夹及其待办' : arm === 1 ? `再点一次确认删除「${name}」` : '删除文件夹'
+    arm >= 2
+      ? '再点一次将删除文件夹及其待办'
+      : arm === 1
+        ? `再点一次确认删除「${name}」`
+        : '删除文件夹'
 
   return (
     <button

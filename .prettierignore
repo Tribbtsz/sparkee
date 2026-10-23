@@ -1,0 +1,12 @@
+node_modules/
+dist/
+worker/.wrangler/
+worker/.cloudflare/
+pnpm-lock.yaml
+
+# 生成物与静态资源
+web/src/icons.tsx
+web/public/
+
+# 中文文档按原文排版，交给作者控制换行与表格
+*.md

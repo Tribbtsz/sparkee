@@ -1,6 +1,6 @@
 name: 功能建议
 description: 想要新的能力，或改现有的交互
-title: "[feat] "
+title: '[feat] '
 labels: [enhancement]
 body:
   - type: markdown

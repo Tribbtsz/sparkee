@@ -1,6 +1,6 @@
 name: Bug 报告
 description: 功能不工作、报错、显示异常
-title: "[bug] "
+title: '[bug] '
 labels: [bug]
 body:
   - type: markdown

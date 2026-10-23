@@ -270,7 +270,8 @@ function originAllowed(origin: string, selfOrigin: string): boolean {
     return false
   }
 
-  return isLoopback(parsed.hostname)}
+  return isLoopback(parsed.hostname)
+}
 
 function isLoopback(hostname: string): boolean {
   return (

@@ -61,6 +61,8 @@ export function NoteCard(props: Props) {
       el.setSelectionRange(el.value.length, el.value.length)
       autoGrow(el, 320)
     })
+    // 只依赖 editing：编辑过程中 note.content 变了也不能重置草稿
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editing])
 
   // 非编辑态时与 props 保持同步（刷新后内容可能变了）
@@ -151,15 +153,15 @@ export function NoteCard(props: Props) {
       class={`${note.is_pinned ? 'bg-card-pinned' : 'bg-card'} rounded-card shadow-card ${
         entering ? 'card-enter' : ''
       }`}
-      style={entering ? { animationDelay: `${Math.min(index, MAX_STAGGER) * STAGGER_MS}ms` } : undefined}
+      style={
+        entering ? { animationDelay: `${Math.min(index, MAX_STAGGER) * STAGGER_MS}ms` } : undefined
+      }
     >
       <div class="px-4 pt-3 pb-3.5">
         {/* ---- 信息行：置顶标记 + 时间 + 平铺的操作图标 ---- */}
         {/* 双击编辑只挂在下面的内容区，所以在这行连点操作图标不会误入编辑态 */}
         <div class="flex items-center gap-1.5">
-          {note.is_pinned && (
-            <PinFilled size={14} class="shrink-0 text-lime-icon" />
-          )}
+          {note.is_pinned && <PinFilled size={14} class="shrink-0 text-lime-icon" />}
           <span class="min-w-0 flex-1 truncate text-[13px] font-medium text-ink-2">
             {formatTime(note.created_at)}
           </span>
@@ -188,7 +190,9 @@ export function NoteCard(props: Props) {
               title={armedTooltip('delete', '删除')}
               busy={busy.delete}
               style={armStyle('delete')}
-              onClick={() => handleArmed('delete', () => void runWithBusy('delete', props.onDelete))}
+              onClick={() =>
+                handleArmed('delete', () => void runWithBusy('delete', props.onDelete))
+              }
             >
               <Delete size={17} />
             </CardAction>

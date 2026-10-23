@@ -31,8 +31,18 @@ jobs:
           node-version: 24
           cache: pnpm
           cache-dependency-path: |
+            pnpm-lock.yaml
             web/pnpm-lock.yaml
             worker/pnpm-lock.yaml
+
+      - name: Install root tooling
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Check formatting
+        run: pnpm format:check
 
       - name: Install web dependencies
         working-directory: web

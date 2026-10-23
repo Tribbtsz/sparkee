@@ -125,7 +125,10 @@ export function insertAtCursor(
 ): { text: string; caret: number } {
   const start = el?.selectionStart ?? value.length
   const end = el?.selectionEnd ?? value.length
-  return { text: value.slice(0, start) + toInsert + value.slice(end), caret: start + toInsert.length }
+  return {
+    text: value.slice(0, start) + toInsert + value.slice(end),
+    caret: start + toInsert.length,
+  }
 }
 
 /** 把光标移到末尾（受控 textarea 在下一帧才更新 DOM，所以放在 rAF 里）。 */

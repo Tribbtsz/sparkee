@@ -50,9 +50,7 @@ export function applyTheme(mode: ThemeMode): ResolvedTheme {
   root.dataset.theme = resolved
   // 让浏览器地址栏跟着变
   root.style.colorScheme = resolved
-  document
-    .querySelector('meta[name="theme-color"]')
-    ?.setAttribute('content', THEME_COLOR[resolved])
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[resolved])
   return resolved
 }
 

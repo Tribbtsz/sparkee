@@ -1,6 +1,15 @@
 import type { ComponentChildren } from 'preact'
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
-import { createNote, deleteNote, fetchNotes, fetchStats, fetchTags, getBaseUrl, getToken, updateNote } from './api'
+import {
+  createNote,
+  deleteNote,
+  fetchNotes,
+  fetchStats,
+  fetchTags,
+  getBaseUrl,
+  getToken,
+  updateNote,
+} from './api'
 import { Composer } from './components/Composer'
 import { NoteCard } from './components/NoteCard'
 import { SettingsDialog } from './components/SettingsDialog'
@@ -418,123 +427,123 @@ export function App() {
 
           {/* 闪念流始终挂载、切到待办本时仅隐藏：下拉刷新的触摸监听不会因切视图而失效 */}
           <div class={view === 'notes' ? 'h-full' : 'hidden'}>
-          {/* 界面内刷新：切 tab / 换筛选时顶部的细进度条 */}
-          {showBusyBar && !loading && <div class="loading-bar" aria-hidden="true" />}
+            {/* 界面内刷新：切 tab / 换筛选时顶部的细进度条 */}
+            {showBusyBar && !loading && <div class="loading-bar" aria-hidden="true" />}
 
-          {/* 下拉刷新指示器：跟着手指张开，刷新期间保持 */}
-          <div
-            class="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-end justify-center overflow-hidden"
-            style={{ height: `${pull}px`, opacity: pull > 0 ? 1 : 0 }}
-          >
-            <span class="mb-2.5 text-ink-2">
-              <Spinner size={20} width={2.4} />
-            </span>
-          </div>
-
-          <div
-            ref={scrollerRef}
-            aria-busy={busy}
-            class="h-full overflow-y-auto"
-            style={{
-              transform: pull > 0 ? `translateY(${pull}px)` : undefined,
-              // 手指还在拖时不能有过渡，否则跟不上手；松手后再补一段回弹动画
-              transition: dragging
-                ? 'none'
-                : 'transform 220ms cubic-bezier(0.215, 0.61, 0.355, 1)',
-            }}
-          >
-            {loading ? (
-            <div class="grid h-[60vh] place-items-center">
-              <Spinner size={36} width={3} />
+            {/* 下拉刷新指示器：跟着手指张开，刷新期间保持 */}
+            <div
+              class="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-end justify-center overflow-hidden"
+              style={{ height: `${pull}px`, opacity: pull > 0 ? 1 : 0 }}
+            >
+              <span class="mb-2.5 text-ink-2">
+                <Spinner size={20} width={2.4} />
+              </span>
             </div>
-          ) : error !== null ? (
-            <div class="flex flex-col items-center px-6 py-20 text-center">
-              <CloudOff size={54} class="text-danger" />
-              <h2 class="mt-4 mb-0 text-[18px] font-medium text-ink">无法连接到后端服务</h2>
-              <p class="mt-2 mb-0 max-w-[560px] text-[13px] leading-relaxed break-words text-ink-2">
-                {error}
-              </p>
-              <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
-                <button
-                  type="button"
-                  class="inline-flex cursor-pointer items-center gap-2 rounded-btn bg-lime px-4 py-2.5 text-[14px] font-bold text-lime-on hover:brightness-95"
-                  onClick={() => void refresh({ showSpinner: true })}
-                >
-                  <Refresh size={18} />
-                  重试
-                </button>
-                <button
-                  type="button"
-                  class="inline-flex cursor-pointer items-center gap-2 rounded-btn border border-line px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
-                  onClick={() => setSettingsOpen(true)}
-                >
-                  <Tune size={18} />
-                  服务器设置
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div class="mx-auto w-full max-w-[1400px] px-6 pt-5 pb-6">
-              {/* 归档盒里没有"新建"的语义，输入卡只出现在非归档视图 */}
-              {!filters.archived && (
-                <>
-                  <Composer onSave={handleCreate} />
-                  <div class="h-[18px]" />
-                </>
-              )}
 
-              {(filters.date !== null || filters.tag !== null) && (
-                <div class="mb-4 flex flex-wrap items-center gap-2">
-                  <span class="text-[13px] font-medium text-ink-2">当前过滤：</span>
-                  {filters.date !== null && (
-                    <FilterChip
-                      icon={<CalendarToday size={14} />}
-                      label={`日期: ${filters.date}`}
-                      onClear={() => pickDate(null)}
-                    />
-                  )}
-                  {filters.tag !== null && (
-                    <FilterChip
-                      icon={<Tag size={14} />}
-                      label={`#${filters.tag}`}
-                      onClear={() => selectTag(null)}
-                    />
-                  )}
+            <div
+              ref={scrollerRef}
+              aria-busy={busy}
+              class="h-full overflow-y-auto"
+              style={{
+                transform: pull > 0 ? `translateY(${pull}px)` : undefined,
+                // 手指还在拖时不能有过渡，否则跟不上手；松手后再补一段回弹动画
+                transition: dragging
+                  ? 'none'
+                  : 'transform 220ms cubic-bezier(0.215, 0.61, 0.355, 1)',
+              }}
+            >
+              {loading ? (
+                <div class="grid h-[60vh] place-items-center">
+                  <Spinner size={36} width={3} />
                 </div>
-              )}
-
-              {notes.length === 0 ? (
-                <div class="flex flex-col items-center py-[60px] text-center">
-                  <EditNote size={72} class="text-lime/60" />
-                  <p class="mt-4 mb-0 text-[17px] font-medium text-ink">{emptyText}</p>
+              ) : error !== null ? (
+                <div class="flex flex-col items-center px-6 py-20 text-center">
+                  <CloudOff size={54} class="text-danger" />
+                  <h2 class="mt-4 mb-0 text-[18px] font-medium text-ink">无法连接到后端服务</h2>
+                  <p class="mt-2 mb-0 max-w-[560px] text-[13px] leading-relaxed break-words text-ink-2">
+                    {error}
+                  </p>
+                  <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      class="inline-flex cursor-pointer items-center gap-2 rounded-btn bg-lime px-4 py-2.5 text-[14px] font-bold text-lime-on hover:brightness-95"
+                      onClick={() => void refresh({ showSpinner: true })}
+                    >
+                      <Refresh size={18} />
+                      重试
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex cursor-pointer items-center gap-2 rounded-btn border border-line px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                      onClick={() => setSettingsOpen(true)}
+                    >
+                      <Tune size={18} />
+                      服务器设置
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div ref={setGridEl} class="masonry" style={{ columnCount: columns }}>
-                  {notes.map((note, index) => (
-                    <NoteCard
-                      key={note.id}
-                      note={note}
-                      index={index}
-                      entering={entering.has(note.id)}
-                      editing={editingId === note.id}
-                      onStartEdit={() => setEditingId(note.id)}
-                      onStopEdit={() => setEditingId(null)}
-                      onTogglePin={() =>
-                        runAction(() => updateNote(note.id, { is_pinned: !note.is_pinned }))
-                      }
-                      onToggleArchive={() =>
-                        runAction(() => updateNote(note.id, { archived: !note.archived }))
-                      }
-                      onDelete={() => runAction(() => deleteNote(note.id))}
-                      onUpdateContent={(content) => handleUpdateContent(note.id, content)}
-                      onTagTap={(tag) => selectTag(tag.toLowerCase())}
-                    />
-                  ))}
+                <div class="mx-auto w-full max-w-[1400px] px-6 pt-5 pb-6">
+                  {/* 归档盒里没有"新建"的语义，输入卡只出现在非归档视图 */}
+                  {!filters.archived && (
+                    <>
+                      <Composer onSave={handleCreate} />
+                      <div class="h-[18px]" />
+                    </>
+                  )}
+
+                  {(filters.date !== null || filters.tag !== null) && (
+                    <div class="mb-4 flex flex-wrap items-center gap-2">
+                      <span class="text-[13px] font-medium text-ink-2">当前过滤：</span>
+                      {filters.date !== null && (
+                        <FilterChip
+                          icon={<CalendarToday size={14} />}
+                          label={`日期: ${filters.date}`}
+                          onClear={() => pickDate(null)}
+                        />
+                      )}
+                      {filters.tag !== null && (
+                        <FilterChip
+                          icon={<Tag size={14} />}
+                          label={`#${filters.tag}`}
+                          onClear={() => selectTag(null)}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {notes.length === 0 ? (
+                    <div class="flex flex-col items-center py-[60px] text-center">
+                      <EditNote size={72} class="text-lime/60" />
+                      <p class="mt-4 mb-0 text-[17px] font-medium text-ink">{emptyText}</p>
+                    </div>
+                  ) : (
+                    <div ref={setGridEl} class="masonry" style={{ columnCount: columns }}>
+                      {notes.map((note, index) => (
+                        <NoteCard
+                          key={note.id}
+                          note={note}
+                          index={index}
+                          entering={entering.has(note.id)}
+                          editing={editingId === note.id}
+                          onStartEdit={() => setEditingId(note.id)}
+                          onStopEdit={() => setEditingId(null)}
+                          onTogglePin={() =>
+                            runAction(() => updateNote(note.id, { is_pinned: !note.is_pinned }))
+                          }
+                          onToggleArchive={() =>
+                            runAction(() => updateNote(note.id, { archived: !note.archived }))
+                          }
+                          onDelete={() => runAction(() => deleteNote(note.id))}
+                          onUpdateContent={(content) => handleUpdateContent(note.id, content)}
+                          onTagTap={(tag) => selectTag(tag.toLowerCase())}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
-          </div>
           </div>
         </main>
       </div>

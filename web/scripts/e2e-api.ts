@@ -66,7 +66,10 @@ function check(name: string, ok: boolean, extra?: unknown) {
 }
 
 function eq(name: string, actual: unknown, expected: unknown) {
-  check(`${name} (期望 ${JSON.stringify(expected)}，实际 ${JSON.stringify(actual)})`, actual === expected)
+  check(
+    `${name} (期望 ${JSON.stringify(expected)}，实际 ${JSON.stringify(actual)})`,
+    actual === expected,
+  )
 }
 
 async function expectMessage(name: string, fn: () => Promise<unknown>, includes: string) {
@@ -107,7 +110,10 @@ eq(
 console.log('\n[2] 连通性与 /api/stats')
 eq('未配置服务器地址时 url 为空（走同源相对路径）', api.getBaseUrl(), '')
 const baseStats = await api.fetchStats()
-check(`fetchStats 拿到 active/archived/total：${JSON.stringify(baseStats)}`, typeof baseStats.active === 'number')
+check(
+  `fetchStats 拿到 active/archived/total：${JSON.stringify(baseStats)}`,
+  typeof baseStats.active === 'number',
+)
 check(
   `请求确实打到 /api/stats：${requestedUrls.at(-1)}`,
   requestedUrls.at(-1) === `${TEST_BASE}/api/stats`,
@@ -119,18 +125,33 @@ const marker = `e2e-${Date.now()}`
 const created = await api.createNote(`E2E 原始内容 #${marker} #工作`)
 eq('id 是数字', typeof created.id, 'number')
 eq('content 原样返回', created.content, `E2E 原始内容 #${marker} #工作`)
-check('tags 已抽出且小写', JSON.stringify(created.tags) === JSON.stringify([marker.toLowerCase(), '工作']), created.tags)
+check(
+  'tags 已抽出且小写',
+  JSON.stringify(created.tags) === JSON.stringify([marker.toLowerCase(), '工作']),
+  created.tags,
+)
 eq('is_pinned=false', created.is_pinned, false)
 eq('archived=false', created.archived, false)
-check('created_at 可被 new Date 解析', !Number.isNaN(new Date(created.created_at).getTime()), created.created_at)
-check('created_at 是带时区的 RFC3339（UTC 时为 Z）', /(?:Z|[+-]\d{2}:\d{2})$/.test(created.created_at), created.created_at)
+check(
+  'created_at 可被 new Date 解析',
+  !Number.isNaN(new Date(created.created_at).getTime()),
+  created.created_at,
+)
+check(
+  'created_at 是带时区的 RFC3339（UTC 时为 Z）',
+  /(?:Z|[+-]\d{2}:\d{2})$/.test(created.created_at),
+  created.created_at,
+)
 
 // ---------------------------------------------------------------- 改（内容）
 console.log('\n[4] PUT /api/notes/{id}（局部更新）')
 const renamed = await api.updateNote(created.id, { content: `E2E 改过的内容 #${marker}` })
 eq('content 已更新', renamed.content, `E2E 改过的内容 #${marker}`)
 eq('tags 跟着重算', renamed.tags.join('|'), marker.toLowerCase())
-check('updated_at >= created_at', new Date(renamed.updated_at).getTime() >= new Date(created.created_at).getTime())
+check(
+  'updated_at >= created_at',
+  new Date(renamed.updated_at).getTime() >= new Date(created.created_at).getTime(),
+)
 
 const pinned = await api.updateNote(created.id, { is_pinned: true })
 eq('只传 is_pinned：置顶生效', pinned.is_pinned, true)
@@ -139,9 +160,17 @@ eq('只传 is_pinned：content 不受影响', pinned.content, `E2E 改过的内�
 // ---------------------------------------------------------------- 查（搜索 / 标签 / 日期）
 console.log('\n[5] GET /api/notes 的筛选参数')
 const byQuery = await api.fetchNotes({ query: '改过的内容' })
-check(`q= 搜到目标卡片`, byQuery.some((n) => n.id === created.id), byQuery.map((n) => n.id))
+check(
+  `q= 搜到目标卡片`,
+  byQuery.some((n) => n.id === created.id),
+  byQuery.map((n) => n.id),
+)
 const byTag = await api.fetchNotes({ tag: marker })
-check(`tag= 搜到目标卡片`, byTag.some((n) => n.id === created.id), byTag.map((n) => n.id))
+check(
+  `tag= 搜到目标卡片`,
+  byTag.some((n) => n.id === created.id),
+  byTag.map((n) => n.id),
+)
 const today = new Date()
 const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`)
 const dateStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
@@ -149,9 +178,16 @@ const byDate = await api.fetchNotes({
   date: dateStr,
   tz: -new Date().getTimezoneOffset(),
 })
-check(`date=${dateStr} 搜到目标卡片`, byDate.some((n) => n.id === created.id), byDate.map((n) => n.id))
+check(
+  `date=${dateStr} 搜到目标卡片`,
+  byDate.some((n) => n.id === created.id),
+  byDate.map((n) => n.id),
+)
 const activeList = await api.fetchNotes({})
-check('archived=false 的列表里有它', activeList.some((n) => n.id === created.id))
+check(
+  'archived=false 的列表里有它',
+  activeList.some((n) => n.id === created.id),
+)
 check('置顶卡片排在最前（is_pinned DESC）', activeList[0].id === created.id, activeList[0].id)
 
 // ---------------------------------------------------------------- 归档
@@ -160,7 +196,10 @@ const archived = await api.updateNote(created.id, { archived: true })
 eq('archived=true', archived.archived, true)
 eq('置顶状态保留', archived.is_pinned, true)
 const archivedList = await api.fetchNotes({ archived: true })
-check('归档视图里有它', archivedList.some((n) => n.id === created.id))
+check(
+  '归档视图里有它',
+  archivedList.some((n) => n.id === created.id),
+)
 const activeAfterArchive = await api.fetchNotes({})
 check('未归档视图里没有它', !activeAfterArchive.some((n) => n.id === created.id))
 
@@ -180,8 +219,16 @@ check('/api/tags 里出现该标签且 count>=1', !!tagEntry && tagEntry.count >
 
 // ---------------------------------------------------------------- 错误路径
 console.log('\n[7] 错误路径与提示文案')
-await expectMessage('内容改成空白 → 400', () => api.updateNote(created.id, { content: '   ' }), '更新闪念失败 400')
-await expectMessage('更新不存在的 id → 404', () => api.updateNote(99999999, { content: 'x' }), '更新闪念失败 404')
+await expectMessage(
+  '内容改成空白 → 400',
+  () => api.updateNote(created.id, { content: '   ' }),
+  '更新闪念失败 400',
+)
+await expectMessage(
+  '更新不存在的 id → 404',
+  () => api.updateNote(99999999, { content: 'x' }),
+  '更新闪念失败 404',
+)
 await expectMessage('删除不存在的 id → 404', () => api.deleteNote(99999999), '删除闪念失败 404')
 await expectMessage('创建空白内容 → 400', () => api.createNote('   '), '创建闪念失败 400')
 
@@ -218,19 +265,37 @@ const tf3 = await api.createTodo('E2E 未分类待办', null)
 eq('folder_id 归属正确', tf1.folder_id, folder.id)
 eq('未分类的 folder_id 为 null', tf3.folder_id, null)
 eq('新待办默认未完成', tf1.is_done, false)
-check('待办也带创建/修改时间', !Number.isNaN(new Date(tf1.created_at).getTime()) && !Number.isNaN(new Date(tf1.updated_at).getTime()))
+check(
+  '待办也带创建/修改时间',
+  !Number.isNaN(new Date(tf1.created_at).getTime()) &&
+    !Number.isNaN(new Date(tf1.updated_at).getTime()),
+)
 
 const inFolder = await api.fetchTodos({ folder: folder.id, sort: 'created', order: 'asc' })
-check('按文件夹过滤：只返回该文件夹的待办', inFolder.every((t) => t.folder_id === folder.id), inFolder.map((t) => t.id))
-check('该文件夹里有刚建的两条', [tf1.id, tf2.id].every((id) => inFolder.some((t) => t.id === id)), inFolder.map((t) => t.id))
+check(
+  '按文件夹过滤：只返回该文件夹的待办',
+  inFolder.every((t) => t.folder_id === folder.id),
+  inFolder.map((t) => t.id),
+)
+check(
+  '该文件夹里有刚建的两条',
+  [tf1.id, tf2.id].every((id) => inFolder.some((t) => t.id === id)),
+  inFolder.map((t) => t.id),
+)
 eq('创建时间正序：先建的在前', inFolder[0].id, tf1.id)
 
 const noneBucket = await api.fetchTodos({ folder: 'none' })
-check('folder=none 拿到未分类待办', noneBucket.some((t) => t.id === tf3.id))
+check(
+  'folder=none 拿到未分类待办',
+  noneBucket.some((t) => t.id === tf3.id),
+)
 
 const done = await api.updateTodo(tf1.id, { is_done: true })
 eq('勾选后 is_done=true', done.is_done, true)
-check('勾选会刷新 updated_at', new Date(done.updated_at).getTime() >= new Date(tf1.created_at).getTime())
+check(
+  '勾选会刷新 updated_at',
+  new Date(done.updated_at).getTime() >= new Date(tf1.created_at).getTime(),
+)
 const afterDone = await api.fetchTodos({ folder: folder.id, sort: 'created', order: 'asc' })
 eq('已完成的沉底（未完成的排最前）', afterDone[0].id, tf2.id)
 
@@ -247,13 +312,24 @@ check('stats.todos_open 计入未完成待办', todoStats.todos_open >= 2, todoS
 
 await expectMessage('创建空白待办 → 400', () => api.createTodo('   ', null), '创建待办失败 400')
 await expectMessage('空白文件夹名 → 400', () => api.createTodoFolder('  '), '创建文件夹失败 400')
-await expectMessage('更新不存在的待办 → 404', () => api.updateTodo(99999999, { content: 'x' }), '更新待办失败 404')
-await expectMessage('删除不存在的文件夹 → 404', () => api.deleteTodoFolder(99999999), '删除文件夹失败 404')
+await expectMessage(
+  '更新不存在的待办 → 404',
+  () => api.updateTodo(99999999, { content: 'x' }),
+  '更新待办失败 404',
+)
+await expectMessage(
+  '删除不存在的文件夹 → 404',
+  () => api.deleteTodoFolder(99999999),
+  '删除文件夹失败 404',
+)
 
 // 删文件夹要级联删掉它的待办；未分类的待办不受影响
 await api.deleteTodoFolder(folder.id)
 const afterFolderDelete = await api.fetchTodos({})
-check('删文件夹后它的待办也没了', !afterFolderDelete.some((t) => t.id === tf1.id || t.id === tf2.id))
+check(
+  '删文件夹后它的待办也没了',
+  !afterFolderDelete.some((t) => t.id === tf1.id || t.id === tf2.id),
+)
 await api.deleteTodo(tf3.id)
 check('未分类待办可单独删除', !(await api.fetchTodos({})).some((t) => t.id === tf3.id))
 eq('收尾后 todos_open 回到基线', (await api.fetchStats()).todos_open, baseStats.todos_open)

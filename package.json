@@ -1,0 +1,29 @@
+{
+  "name": "sparkee",
+  "private": true,
+  "version": "1.0.0",
+  "description": "极简闪念速记：Cloudflare Workers + D1 + Preact PWA",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tribbtsz/sparkee.git"
+  },
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "typescript-eslint": "^8.72.0"
+  }
+}
