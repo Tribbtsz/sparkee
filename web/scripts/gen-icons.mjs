@@ -33,6 +33,8 @@ const ICONS = [
   ['Refresh', 'rounded/refresh-fill.svg', '刷新'],
   ['CalendarMonth', 'rounded/calendar_month-fill.svg', '日期筛选'],
   ['CalendarToday', 'rounded/calendar_today-fill.svg', '日期筛选条上的小日历'],
+  ['ChevronLeft', 'rounded/chevron_left.svg', '上一步（日历翻月/翻年）'],
+  ['ChevronRight', 'rounded/chevron_right.svg', '下一步（日历翻月/翻年）'],
   ['Add', 'rounded/add-fill.svg', '新增'],
   ['Edit', 'outlined/edit.svg', '编辑'],
   ['Tune', 'rounded/tune-fill.svg', '服务器配置'],

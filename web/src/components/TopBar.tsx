@@ -1,6 +1,6 @@
-import type { ComponentChildren } from 'preact'
-import { useRef } from 'preact/hooks'
+import { useRef, useState } from 'preact/hooks'
 import { CalendarMonth, Close, Menu, Search } from '../icons'
+import { DatePicker } from './DatePicker'
 import { Spinner } from './Spinner'
 
 interface Props {
@@ -25,22 +25,8 @@ export function TopBar({
   onPickDate,
   onOpenSidebar,
 }: Props) {
-  const dateRef = useRef<HTMLInputElement | null>(null)
-
-  function toggleDate() {
-    if (selectedDate) {
-      onPickDate(null)
-      return
-    }
-    const el = dateRef.current
-    if (!el) return
-    // showPicker() 需要用户手势，这个点击满足；个别浏览器不支持就退回 click()
-    try {
-      el.showPicker()
-    } catch {
-      el.click()
-    }
-  }
+  const [dateOpen, setDateOpen] = useState(false)
+  const dateBtnRef = useRef<HTMLButtonElement | null>(null)
 
   return (
     <header class="flex h-16 shrink-0 items-center gap-1 bg-scaffold px-3 md:gap-2 md:px-7">
@@ -91,53 +77,36 @@ export function TopBar({
           否则它会和搜索框抢 flex-1，把搜索框挤窄到文字显示不全。 */}
       <div class="hidden flex-1 md:block" />
 
-      {/* ---- 日期筛选 ---- */}
-      <IconButton
-        title={selectedDate === null ? '按日期筛选' : `当前筛选: ${selectedDate} · 点击清除`}
-        onClick={toggleDate}
+      {/* ---- 日期筛选：自己画的日历浮层，不用原生 date 选择器 ---- */}
+      <button
+        ref={dateBtnRef}
+        type="button"
+        title={selectedDate === null ? '按日期筛选' : `当前筛选: ${selectedDate} · 点击修改`}
+        aria-label="按日期筛选"
+        aria-haspopup="dialog"
+        aria-expanded={dateOpen}
+        class="grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full text-ink hover:bg-black/[0.06] dark:hover:bg-white/[0.08]"
+        onClick={() => setDateOpen((v) => !v)}
       >
         <span class={selectedDate ? 'text-lime' : undefined}>
           <CalendarMonth size={24} />
         </span>
-      </IconButton>
+      </button>
 
       <span class="hidden w-1 md:block" />
 
-      <input
-        ref={dateRef}
-        type="date"
-        aria-hidden="true"
-        tabIndex={-1}
-        value={selectedDate ?? ''}
-        min="2020-01-01"
-        max="2035-12-31"
-        class="pointer-events-none absolute h-px w-px opacity-0"
-        onChange={(e) => onPickDate(e.currentTarget.value || null)}
-      />
+      {dateOpen && (
+        <DatePicker
+          value={selectedDate}
+          anchorRef={dateBtnRef}
+          onPick={(date) => {
+            onPickDate(date)
+            setDateOpen(false)
+          }}
+          onClear={() => onPickDate(null)}
+          onClose={() => setDateOpen(false)}
+        />
+      )}
     </header>
-  )
-}
-
-function IconButton({
-  title,
-  onClick,
-  class: cls,
-  children,
-}: {
-  title: string
-  onClick: () => void
-  class?: string
-  children: ComponentChildren
-}) {
-  return (
-    <button
-      type="button"
-      title={title}
-      aria-label={title}
-      class={`grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full text-ink hover:bg-black/[0.06] dark:hover:bg-white/[0.08] ${cls ?? ''}`}
-      onClick={onClick}
-    >
-      {children}
-    </button>
   )
 }

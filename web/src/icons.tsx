@@ -145,6 +145,24 @@ export function CalendarToday({ size = 20, ...rest }: IconProps) {
   );
 }
 
+/** 上一步（日历翻月/翻年）（rounded/chevron_left.svg） */
+export function ChevronLeft({ size = 20, ...rest }: IconProps) {
+  return (
+    <svg viewBox="0 -960 960 960" width={size} height={size} fill="currentColor" aria-hidden="true" {...rest}>
+      <path d="m406-481 177 177q9 9 8.5 21t-9.5 21q-9 9-21.5 9t-21.5-9L341-460q-5-5-7-10t-2-11q0-6 2-11t7-10l199-199q9-9 21.5-9t21.5 9q9 9 9 21.5t-9 21.5L406-481Z" />
+    </svg>
+  );
+}
+
+/** 下一步（日历翻月/翻年）（rounded/chevron_right.svg） */
+export function ChevronRight({ size = 20, ...rest }: IconProps) {
+  return (
+    <svg viewBox="0 -960 960 960" width={size} height={size} fill="currentColor" aria-hidden="true" {...rest}>
+      <path d="M530-481 353-658q-9-9-8.5-21t9.5-21q9-9 21.5-9t21.5 9l198 198q5 5 7 10t2 11q0 6-2 11t-7 10L396-261q-9 9-21 8.5t-21-9.5q-9-9-9-21.5t9-21.5l176-176Z" />
+    </svg>
+  );
+}
+
 /** 新增（rounded/add-fill.svg） */
 export function Add({ size = 20, ...rest }: IconProps) {
   return (
