@@ -30,7 +30,14 @@ export default defineConfig({
     name: 'sparkee',
     compatibilityDate: '2026-10-25',
     entrypoint,
-    observability: { enabled: true },
+    // 与 dashboard 上的远程配置保持一致，否则 cf deploy 的 --strict 检查会中止上传。
+    // 远程当前是「总开关关、traces 开」——这是控制台里遗留的状态，先对齐让部署跑通；
+    // 之后想打开日志，在控制台把三个开关一起开，再把这里同步成一样的值。
+    observability: {
+      enabled: false,
+      issues: { enabled: false },
+      traces: { enabled: true },
+    },
     assets: {
       notFoundHandling: 'single-page-application',
       runWorkerFirst: ['/api/*'],
