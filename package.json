@@ -16,7 +16,10 @@
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "build:web": "pnpm --dir web install --frozen-lockfile && pnpm --dir web build",
+    "deploy": "pnpm run build:web && pnpm --dir worker install --frozen-lockfile && pnpm --dir worker release",
+    "preview": "pnpm run build:web && pnpm --dir worker install --frozen-lockfile && pnpm --dir worker exec cf previews deploy"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
