@@ -106,54 +106,48 @@ $EDITOR worker/.env        # 填 account / d1 / domain，用不到的留空
 
 ## 部署
 
-推送主分支**不会**自动部署，仓库里只有跑检查的 `ci.yml`。想「推送即上线」有两条路：
+推送主分支不会自动部署——仓库里只有跑检查的 `ci.yml`。要「推送即上线」是在
+Cloudflare 控制台开 Git 集成，仓库里不用放任何密钥。
 
-- **控制台开 Git 集成（不需要 token）**：Workers & Pages → 选中 `sparkee` →
-  Settings → **Builds** → Connect GitHub，按提示配置构建命令。授权走 OAuth，
-  GitHub 仓库里不用放任何密钥。这是最省事的一条。
-- **GitHub Actions 部署**：CI 是无界面环境，Cloudflare 要求必须提供 API token
-  （最小权限：Account API token，只勾 `Edit Cloudflare Workers`）。要这条我可以加。
+### 控制台 Git 集成（推荐）
 
-两条路都要注意：`cf deploy` 不跑数据库迁移，改了表结构得手动
-`cf d1 migrations apply "$SPARKEE_D1_ID" --dir migrations`。
+Workers & Pages → 选中 `sparkee` → Settings → **Builds** → Connect GitHub。
+授权走 OAuth，不用建 API token。三个字段：
 
-手动部署（本机已 `cf auth login` 时）：
+| 字段 | 值 |
+| --- | --- |
+| Build command | 留空 |
+| Deploy command | `pnpm run deploy` |
+| Preview command | `pnpm run preview` |
+
+构建配置里还要给两个变量（值在本机 `worker/.env`）：`SPARKEE_D1_ID`、
+`SPARKEE_DOMAIN`。`SPARKEE_TOKEN` 可不给——`cf deploy` 会沿用线上已有的 secret。
+
+### 本机手动部署
+
+首次先登录、建库，把返回的 uuid 填进 `worker/.env` 的 `SPARKEE_D1_ID`：
 
 ```bash
 cd worker
 cf auth login
-
-# 创建数据库（记下返回的 uuid）
 cf d1 create sparkee --primary-location-hint enam
-
-export CLOUDFLARE_ACCOUNT_ID=<account-id>
-export SPARKEE_D1_ID=<d1-uuid>
-export SPARKEE_DOMAIN=sparkee.example.com
-
-cf d1 migrations apply "$SPARKEE_D1_ID" --dir migrations
-
-cd ../web && pnpm build && cd ../worker
-printf 'SPARKEE_TOKEN=<long-random-token>\n' > secrets.env
-pnpm release -- --secrets-file secrets.env
 ```
 
-PowerShell 里把 `export` 换成：
+之后每次发版就一条命令（装依赖 → 构建前端 → cf deploy）：
 
-```powershell
-$env:CLOUDFLARE_ACCOUNT_ID='<account-id>'
-$env:SPARKEE_D1_ID='<d1-uuid>'
-$env:SPARKEE_DOMAIN='sparkee.example.com'
+```bash
+pnpm run deploy
 ```
 
-（这三个也可以写进 `worker/.env`，就不必每次 export；见「环境变量」。）
+必须是 `pnpm run deploy`：`pnpm deploy` 会命中 pnpm 的内置命令，报
+`A deploy is only possible from inside a workspace`。
 
 说明：
 
-- `pnpm release -- --secrets-file ...` 会把口令和 Worker 版本一起上传，
-  不存在“先部署、后设口令”的空窗。`--` 是给 pnpm 的参数分隔符。
-- 之后改前端只需 `cd web && pnpm build && cd ../worker && pnpm release`。
-- 部署前可以先 `pnpm release -- --dry-run` 验证构建。
-- 自定义域名需要在同一个 Cloudflare 账号的 DNS 下；不填 `SPARKEE_DOMAIN` 就用
+- `cf deploy` **不跑数据库迁移**。改了表结构要手动
+  `cf d1 migrations apply "$SPARKEE_D1_ID" --dir migrations`。
+- 想只验证构建不真发：`pnpm --dir worker release -- --dry-run`。
+- 自定义域名要在同一个 Cloudflare 账号的 DNS 下；`SPARKEE_DOMAIN` 留空则只部署到
   `https://<worker>.<subdomain>.workers.dev`。
 
 ## PWA
