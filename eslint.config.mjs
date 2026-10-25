@@ -50,6 +50,7 @@ export default tseslint.config(
   {
     files: [
       'web/scripts/**/*.{ts,mjs}',
+      'worker/scripts/**/*.mjs',
       'web/vite.config.ts',
       'worker/*.config.ts',
       'eslint.config.mjs',
