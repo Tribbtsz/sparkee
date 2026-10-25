@@ -37,6 +37,7 @@ export default defineConfig({
       enabled: false,
       issues: { enabled: false },
       traces: { enabled: true },
+      logs: { enabled: true },
     },
     assets: {
       notFoundHandling: 'single-page-application',
