@@ -28,7 +28,7 @@ export default defineConfig({
   ...(accountId ? { accountId } : {}),
   worker: {
     name: 'sparkee',
-    compatibilityDate: '2026-10-01',
+    compatibilityDate: '2026-10-25',
     entrypoint,
     observability: { enabled: true },
     assets: {
