@@ -106,6 +106,31 @@ $EDITOR worker/.env        # 填 account / d1 / domain，用不到的留空
 
 ## 部署
 
+### 自动部署（推送主分支）
+
+`.github/workflows/deploy.yml` 监听 main：先 lint / 构建前端，再把 Worker 和
+`web/dist` 的静态资源一起上传。**推送即上线**，不用在本机敲 `cf deploy`。
+
+只差一次配置：在仓库 **Settings → Secrets and variables → Actions** 里加 5 个
+repository secret（本地那份就够，不用新建）：
+
+| Secret | 必填 | 说明 |
+| --- | --- | --- |
+| `CLOUDFLARE_API_TOKEN` | 是 | 部署用的 API Token（Account / Workers Scripts 编辑权限） |
+| `SPARKEE_D1_ID` | 是 | 远程 D1 的 UUID，`cf d1 list` 能看到 |
+| `SPARKEE_TOKEN` | 是 | 访问口令，随 Worker 版本一起上传 |
+| `CLOUDFLARE_ACCOUNT_ID` | 否 | 不填则用 Token 所属账号 |
+| `SPARKEE_DOMAIN` | 否 | 自定义域名；留空只部署到 `*.workers.dev` |
+
+缺前三个时工作流会在部署前就报错退出——尤其 `SPARKEE_D1_ID`，取不到它会回落到
+占位 UUID，那种部署能成功但 Worker 绑的是个不存在的数据库。
+
+> **改了表结构要手动 apply**：`cf deploy` 不会跑迁移。在 `worker/` 下执行
+> `cf d1 migrations apply "$SPARKEE_D1_ID" --dir migrations`，或者推送后在
+> Actions 里手动触发一次上面的命令。
+
+### 手动部署
+
 ```bash
 cd worker
 cf auth login

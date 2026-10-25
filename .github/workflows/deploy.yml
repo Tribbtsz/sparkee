@@ -1,0 +1,86 @@
+name: deploy
+
+# 推送主分支即部署。前端必须先 build —— cf deploy 自己不跑 web 的 build 脚本，
+# 静态资源（web/dist）是跟着 Worker 版本一起上传的，所以「改了前端但没重新 build」
+# 会被原样发布上去。这也是以前推 main 线上不更新的原因：仓库里根本没有部署步骤。
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 部署必须串行且不可取消：中途取消会让线上停留在「代码是新、资源是旧」的版本
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      WRANGLER_SEND_METRICS: false
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      SPARKEE_D1_ID: ${{ secrets.SPARKEE_D1_ID }}
+      SPARKEE_DOMAIN: ${{ secrets.SPARKEE_DOMAIN }}
+      SPARKEE_TOKEN: ${{ secrets.SPARKEE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.34.5
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            web/pnpm-lock.yaml
+            worker/pnpm-lock.yaml
+
+      # 缺密钥就尽早失败。尤其 SPARKEE_D1_ID：cloudflare.config.ts 取不到它会
+      # 回落到占位 UUID，那种 Worker 能部署成功但绑的是个不存在的数据库。
+      - name: Check secrets
+        run: |
+          missing=0
+          for name in CLOUDFLARE_API_TOKEN SPARKEE_D1_ID SPARKEE_TOKEN; do
+            if [ -z "${!name}" ]; then
+              echo "::error::缺少 repository secret：$name"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - name: Install root tooling
+        run: pnpm install --frozen-lockfile
+
+      # 别把 CI 会拒的代码发上线
+      - name: Lint and format check
+        run: |
+          pnpm lint
+          pnpm format:check
+
+      - name: Build web
+        working-directory: web
+        run: pnpm install --frozen-lockfile && pnpm build
+
+      - name: Install worker dependencies
+        working-directory: worker
+        run: pnpm install --frozen-lockfile
+
+      # 访问口令随 Worker 版本一起上传，不存在「先部署、后设口令」的空窗。
+      # secrets.env 已被 gitignore，只在 runner 上存在。
+      - name: Write secrets file
+        working-directory: worker
+        run: |
+          umask 077
+          printf 'SPARKEE_TOKEN=%s\n' "$SPARKEE_TOKEN" > secrets.env
+
+      - name: Deploy
+        working-directory: worker
+        run: pnpm release -- --secrets-file secrets.env
