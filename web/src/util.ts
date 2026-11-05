@@ -138,6 +138,16 @@ export function caretToEnd(el: HTMLTextAreaElement | null): void {
   })
 }
 
+/**
+ * 保存成功后从输入框里移除已提交的那段文字。
+ * 用户在请求进行中可能继续输入：仍以提交内容开头时只移除这一段，
+ * 已改过（删掉/替换）就原样保留，宁可不清理也不要吞掉新输入。
+ */
+export function stripSubmitted(current: string, submitted: string): string {
+  if (current === '' || submitted === '' || !current.startsWith(submitted)) return current
+  return current.slice(submitted.length).replace(/^[ \t\r\n]+/, '')
+}
+
 /** 拼接 class（跳过假值）。 */
 export function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')

@@ -24,9 +24,10 @@ import {
   Sort,
   Tune,
 } from '../icons'
+import { loadTodoDraft, saveTodoDraft } from '../draft'
 import { usePullToRefresh } from '../pullToRefresh'
 import type { Todo, TodoFolder } from '../types'
-import { autoGrow, cx } from '../util'
+import { autoGrow, cx, stripSubmitted } from '../util'
 import { Spinner } from './Spinner'
 import { toast } from './Toast'
 import { TodoRow } from './TodoRow'
@@ -35,8 +36,10 @@ import { TodoRow } from './TodoRow'
 type FolderSel = 'all' | 'none' | number
 
 interface Props {
-  /** 递增时重新加载（切回待办本 / 修改服务器配置后）。 */
+  /** 递增时重新加载（切回待办本）。 */
   refreshKey: number
+  /** 服务器地址变更后递增：丢弃旧实例数据并重新加载。 */
+  serverEpoch: number
   /** 窄屏时打开侧栏抽屉。 */
   onOpenSidebar: () => void
   /** 待办数量变化后回调，让侧栏「待办本」徽标刷新。 */
@@ -51,7 +54,13 @@ interface Props {
  * 只做三件事：一级文件夹（项目隔离）、勾选完成、按创建/修改时间排序。
  * 不做优先级、截止时间、标签、提醒——它只是一个有序的备忘清单。
  */
-export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings }: Props) {
+export function TodoView({
+  refreshKey,
+  serverEpoch,
+  onOpenSidebar,
+  onChanged,
+  onOpenSettings,
+}: Props) {
   const [folders, setFolders] = useState<TodoFolder[]>([])
   const [todos, setTodos] = useState<Todo[]>([])
   const [loading, setLoading] = useState(true)
@@ -64,8 +73,10 @@ export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings 
   const [sort, setSort] = useState<TodoSort>('created')
   const [order, setOrder] = useState<TodoOrder>('asc')
 
-  const [text, setText] = useState('')
+  const [text, setText] = useState(loadTodoDraft)
   const [saving, setSaving] = useState(false)
+  /** 同步挡重复提交（连续 Enter）。 */
+  const savingRef = useRef(false)
 
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
@@ -78,6 +89,8 @@ export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings 
   const orderRef = useRef<TodoOrder>(order)
   const seqRef = useRef(0)
   const todosRef = useRef<Todo[]>([])
+  /** 与 serverEpoch 同步的 ref：异步写入返回时判断服务器是否已经换了。 */
+  const serverEpochRef = useRef(serverEpoch)
 
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const newFolderRef = useRef<HTMLInputElement | null>(null)
@@ -126,13 +139,38 @@ export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings 
     }
   }, [])
 
+  // 草稿落盘：刷新/离线后还能接着写
+  useEffect(() => {
+    saveTodoDraft(text)
+  }, [text])
+
   // 首次挂载和 refreshKey 变化都重新拉取；已有数据时不再整页转圈。
   useEffect(() => {
-    void load({ showSpinner: todosRef.current.length === 0 })
-  }, [load, refreshKey])
+    const switched = serverEpochRef.current !== serverEpoch
+    serverEpochRef.current = serverEpoch
+    if (switched) {
+      // 旧实例的 id/文件夹在新服务器上没有意义，先全部丢弃再加载
+      seqRef.current++
+      todosRef.current = []
+      setTodos([])
+      setFolders([])
+      setEntering(new Set())
+      setEditingId(null)
+      selRef.current = 'all'
+      setSel('all')
+      setAdding(false)
+      setRenameId(null)
+    }
+    void load({ showSpinner: switched || todosRef.current.length === 0 })
+  }, [load, refreshKey, serverEpoch])
 
   // 移动端下拉刷新（桌面没有触摸事件，天然不受影响）
   const { pull, dragging } = usePullToRefresh(scrollerRef, load)
+
+  // 恢复的草稿可能不止一行；等输入卡真正渲染出来再撑开
+  useEffect(() => {
+    if (!loading) autoGrow(inputRef.current, 180)
+  }, [loading])
 
   useEffect(() => {
     if (adding) requestAnimationFrame(() => newFolderRef.current?.focus())
@@ -162,33 +200,44 @@ export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings 
    * rethrow 用于内容编辑：失败时必须让 TodoRow 保持编辑态，不能吞掉异常。
    */
   async function runAction(action: () => Promise<unknown>, opts: { rethrow?: boolean } = {}) {
+    const epoch = serverEpochRef.current
     try {
       await action()
     } catch (e) {
       toast(`操作失败：${errText(e)}`)
-      await load()
-      onChanged()
+      if (epoch === serverEpochRef.current) {
+        await load()
+        onChanged()
+      }
       if (opts.rethrow) throw e
       return
     }
+    if (epoch !== serverEpochRef.current) return
     await load()
     onChanged()
   }
 
   async function addTodo() {
-    const content = text.trim()
-    if (!content || saving) return
+    const submitted = text
+    const content = submitted.trim()
+    if (!content || savingRef.current) return
+    const epoch = serverEpochRef.current
+    savingRef.current = true
     setSaving(true)
     try {
       const folderId = typeof selRef.current === 'number' ? selRef.current : null
       await createTodo(content, folderId)
-      setText('')
-      if (inputRef.current) inputRef.current.style.height = 'auto'
+      // 写到了旧服务器：保留草稿，避免内容跟着旧实例一起消失
+      if (epoch !== serverEpochRef.current) return
+      // 保存期间继续写的部分保留，只移除已经提交的那段
+      setText((current) => stripSubmitted(current, submitted))
+      requestAnimationFrame(() => autoGrow(inputRef.current, 180))
       await load()
       onChanged()
     } catch (e) {
       toast(`保存失败：${errText(e)}`)
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
   }
@@ -528,7 +577,7 @@ export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings 
                         editing={editingId === t.id}
                         folderName={showFolderLabel ? nameOfFolder(t.folder_id) : null}
                         onStartEdit={() => setEditingId(t.id)}
-                        onStopEdit={() => setEditingId(null)}
+                        onStopEdit={() => setEditingId((id) => (id === t.id ? null : id))}
                         onToggleDone={() =>
                           runAction(() => updateTodo(t.id, { is_done: !t.is_done }))
                         }

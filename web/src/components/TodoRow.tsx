@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
-import { CheckCircle, Delete, Folder, RadioButtonUnchecked } from '../icons'
+import { CheckCircle, Delete, Edit, Folder, RadioButtonUnchecked } from '../icons'
 import type { Todo } from '../types'
 import { autoGrow, cx, formatDateTime, formatTime } from '../util'
 import { Spinner } from './Spinner'
@@ -221,7 +221,19 @@ export function TodoRow(props: Props) {
           </div>
         </div>
 
-        {/* ---- 删除 ---- */}
+        {/* ---- 编辑 / 删除 ---- */}
+        {!editing && (
+          <button
+            type="button"
+            title="编辑待办"
+            aria-label="编辑待办"
+            class="grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-md text-ink-2 transition-colors hover:bg-black/[0.06] dark:hover:bg-white/[0.08]"
+            onClick={props.onStartEdit}
+          >
+            <Edit size={17} />
+          </button>
+        )}
+
         <button
           type="button"
           title={deleteTitle}

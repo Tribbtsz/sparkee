@@ -73,8 +73,10 @@ export function App() {
   const [view, setView] = useState<View>('notes')
   /** 首次打开待办本后才挂载；之后保持挂载，切回来不会丢文件夹选择/排序/草稿。 */
   const [todosVisited, setTodosVisited] = useState(false)
-  /** 递增后让已挂载的 TodoView 重新拉一次数据（切回待办本 / 改完服务器配置）。 */
+  /** 递增后让已挂载的 TodoView 重新拉一次数据（切回待办本）。 */
   const [todosRefreshKey, setTodosRefreshKey] = useState(0)
+  /** 服务器地址变更后递增：通知 TodoView 丢弃旧实例数据并重新加载。 */
+  const [serverEpoch, setServerEpoch] = useState(0)
   const [filters, setFilters] = useState<Filters>({
     archived: false,
     tag: null,
@@ -110,6 +112,8 @@ export function App() {
   const notesRef = useRef<Note[]>([])
   /** 刷新请求序号：快速切换筛选时丢弃过期响应，避免旧结果覆盖新结果。 */
   const seqRef = useRef(0)
+  /** 与 serverEpoch 同步的 ref：异步写操作返回时用它判断服务器是否已经换了。 */
+  const serverEpochRef = useRef(0)
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
   /** 列表滚动容器：下拉刷新的手势挂在它身上。 */
   const scrollerRef = useRef<HTMLDivElement | null>(null)
@@ -288,17 +292,47 @@ export function App() {
 
   // ---- 写操作 ----
 
+  /**
+   * 切换服务器后调用：旧列表属于另一个实例，id 在新服务器上可能指向别的东西。
+   * 先清空并作废旧请求，再按新配置重新拉取；加载完成前页面只显示转圈，写操作无处可点。
+   */
+  function adoptServer() {
+    serverEpochRef.current += 1
+    setServerEpoch(serverEpochRef.current)
+    seqRef.current++
+    notesRef.current = []
+    setNotes([])
+    setTags([])
+    setStats(NO_STATS)
+    setEntering(new Set())
+    setEditingId(null)
+    // 旧实例的标签/日期/搜索词在新实例里可能毫无意义，留着会让列表看起来是空的。
+    const cleared: Filters = { archived: false, tag: null, date: null, query: '' }
+    filtersRef.current = cleared
+    setFilters(cleared)
+    setQueryInput('')
+    setLoading(true)
+    setError(null)
+    setBusy(false)
+    setSearchBusy(false)
+    void refresh({ showSpinner: true })
+  }
+
   /** 执行带错误提示的写操作，完成后刷新列表。 */
   async function runAction(action: () => Promise<unknown>) {
+    const epoch = serverEpochRef.current
     try {
       await action()
     } catch (e) {
       toast(`操作失败：${errText(e)}`)
     }
+    // 写操作期间换了服务器：新实例的数据由 adoptServer 负责加载
+    if (epoch !== serverEpochRef.current) return
     await refresh()
   }
 
-  async function handleCreate(content: string) {
+  async function handleCreate(content: string): Promise<boolean> {
+    const epoch = serverEpochRef.current
     let note: Note
     try {
       note = await createNote(content)
@@ -307,11 +341,14 @@ export function App() {
       throw e // 让输入框保留内容，方便重试
     }
 
+    // 这条写到了旧服务器：不要把它混进新服务器的列表，也不清空草稿。
+    if (epoch !== serverEpochRef.current) return false
+
     // 已有列表请求在飞时，响应可能不包含刚创建的卡片；
     // 这种少见情况走一次完整刷新，保证不会把新卡片覆盖掉。
     if (busy) {
       await refresh()
-      return
+      return true
     }
 
     // 用 POST 返回的对象直接插入，避免整表重拉造成列表重排/闪烁。
@@ -332,15 +369,18 @@ export function App() {
 
     // 标签计数需要跨卡片统计，后台静默校准，不阻塞输入。
     void refreshTags()
+    return true
   }
 
   async function handleUpdateContent(id: number, content: string) {
+    const epoch = serverEpochRef.current
     try {
       await updateNote(id, { content })
     } catch (e) {
       toast(`保存失败：${errText(e)}`)
       throw e // 让卡片保持编辑态，方便重试
     }
+    if (epoch !== serverEpochRef.current) return
     await refresh()
   }
 
@@ -416,6 +456,7 @@ export function App() {
             <div class={view === 'todos' ? 'h-full' : 'hidden'}>
               <TodoView
                 refreshKey={todosRefreshKey}
+                serverEpoch={serverEpoch}
                 onOpenSidebar={() => setDrawerOpen(true)}
                 onChanged={refreshStats}
                 onOpenSettings={() => setSettingsOpen(true)}
@@ -525,7 +566,7 @@ export function App() {
                           entering={entering.has(note.id)}
                           editing={editingId === note.id}
                           onStartEdit={() => setEditingId(note.id)}
-                          onStopEdit={() => setEditingId(null)}
+                          onStopEdit={() => setEditingId((id) => (id === note.id ? null : id))}
                           onTogglePin={() =>
                             runAction(() => updateNote(note.id, { is_pinned: !note.is_pinned }))
                           }
@@ -569,11 +610,15 @@ export function App() {
       {settingsOpen && (
         <SettingsDialog
           onClose={() => setSettingsOpen(false)}
-          onSaved={() => {
+          onSaved={({ base }) => {
             setSettingsOpen(false)
             setEditingId(null)
-            setTodosRefreshKey((k) => k + 1)
-            void refresh({ showSpinner: true })
+            if (base) {
+              adoptServer()
+            } else {
+              setTodosRefreshKey((k) => k + 1)
+              void refresh({ showSpinner: true })
+            }
           }}
         />
       )}

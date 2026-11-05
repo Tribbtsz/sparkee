@@ -4,7 +4,8 @@ import type { Note, Stats, TagStat, Todo, TodoFolder } from './types'
  * 后端 API 封装。
  *
  * 地址策略：
- *   1. localStorage 里用户在「服务器配置」填的地址（可选，用于连到别的实例）；
+ *   1. localStorage 里用户在「服务器配置」填的地址（可选，用于本地开发或 CORS
+ *      已放行当前来源的实例；Worker 默认只放行同源与本机回环）；
  *   2. 默认保持「同源」——相对路径 `/api/...`。开发时由 Vite 把 /api 代理到 8787
  *      （cf dev），生产时由 Workers Assets 托管，两边都天然同源、无 CORS。
  *

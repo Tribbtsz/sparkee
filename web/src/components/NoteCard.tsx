@@ -1,6 +1,6 @@
 import type { ComponentChildren } from 'preact'
 import { useEffect, useRef, useState } from 'preact/hooks'
-import { Archive, Delete, PinFilled, PinOutline, Unarchive } from '../icons'
+import { Archive, Delete, Edit, PinFilled, PinOutline, Unarchive } from '../icons'
 import type { Note } from '../types'
 import { appendTag, autoGrow, bodyOf, caretToEnd, formatTime, removeTag, tagsOf } from '../util'
 import { Spinner } from './Spinner'
@@ -167,6 +167,12 @@ export function NoteCard(props: Props) {
           </span>
 
           <div class="flex shrink-0 items-center gap-1">
+            {!editing && (
+              <CardAction title="编辑内容" busy={false} onClick={props.onStartEdit}>
+                <Edit size={17} />
+              </CardAction>
+            )}
+
             <CardAction
               title={note.is_pinned ? '取消置顶' : '置顶卡片'}
               busy={busy.pin}

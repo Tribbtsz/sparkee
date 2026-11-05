@@ -1,12 +1,16 @@
 import type { ComponentChildren } from 'preact'
-import { useRef, useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
+import { loadNoteDraft, saveNoteDraft } from '../draft'
 import { FlashOn, Schedule, Today } from '../icons'
-import { autoGrow, insertAtCursor, nowHm, todayStr } from '../util'
+import { autoGrow, insertAtCursor, nowHm, stripSubmitted, todayStr } from '../util'
 import { Spinner } from './Spinner'
 
 interface Props {
-  /** 保存失败时抛错，输入框会保留内容方便重试。 */
-  onSave: (content: string) => Promise<void>
+  /**
+   * 保存失败时抛错，输入框会保留内容方便重试。
+   * 返回 false 表示这次内容没有被当前服务器接收（例如保存期间切了服务器），同样保留草稿。
+   */
+  onSave: (content: string) => Promise<boolean>
 }
 
 /**
@@ -14,9 +18,20 @@ interface Props {
  * Enter 直接发送；Shift+Enter / Ctrl+Enter（Mac 上 Cmd+Enter）插入换行。
  */
 export function Composer({ onSave }: Props) {
-  const [text, setText] = useState('')
+  const [text, setText] = useState(loadNoteDraft)
   const [saving, setSaving] = useState(false)
   const ref = useRef<HTMLTextAreaElement | null>(null)
+  /** 同步挡重复提交：连续按 Enter 时 state 还没渲染，光靠 saving 会漏。 */
+  const savingRef = useRef(false)
+
+  useEffect(() => {
+    saveNoteDraft(text)
+  }, [text])
+
+  // 恢复的草稿可能不止两行，挂载后先按内容撑开
+  useEffect(() => {
+    autoGrow(ref.current, 180)
+  }, [])
 
   /** 在光标处插入文本，并把光标移到插入内容之后。 */
   function insert(toInsert: string) {
@@ -33,20 +48,28 @@ export function Composer({ onSave }: Props) {
   }
 
   async function submit() {
-    const content = text.trim()
-    if (!content || saving) return
+    const submitted = text
+    const content = submitted.trim()
+    if (!content || savingRef.current) return
+    const hadFocus = document.activeElement === ref.current
+    savingRef.current = true
     setSaving(true)
     try {
-      await onSave(content)
-      setText('')
-      if (ref.current) {
-        ref.current.style.height = 'auto'
-        // 连续记录：不收起键盘、不丢焦点，避免移动端视口高度变化造成闪动。
-        ref.current.focus()
-      }
+      const consumed = await onSave(content)
+      if (!consumed) return
+      // 保存期间可能又写了一段：只拿掉已提交的部分，新输入原样保留。
+      setText((current) => stripSubmitted(current, submitted))
+      requestAnimationFrame(() => {
+        const el = ref.current
+        if (!el) return
+        autoGrow(el, 180)
+        // 连续记录：不收起键盘、不丢焦点；用户已点到别处就别抢回来。
+        if (hadFocus) el.focus()
+      })
     } catch {
       // 保留已输入内容，错误提示由上层统一 toast
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
   }
