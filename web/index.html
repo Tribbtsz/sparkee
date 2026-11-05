@@ -16,6 +16,98 @@
     />
     <meta name="theme-color" content="#F7F8FA" />
     <title>Sparkee</title>
+    <style>
+      /* 首屏兜底：主样式表下载完成前就给出正确的底色和加载占位，避免纯白屏。 */
+      html,
+      body {
+        margin: 0;
+        background: #f7f8fa;
+      }
+      html[data-theme='dark'],
+      html[data-theme='dark'] body {
+        background: #0d0e11;
+      }
+      #boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background: inherit;
+        /* 默认就是可见的：首屏渲染可能被样式表阻塞，依赖动画淡入反而会一直透明。 */
+        transition: opacity 180ms ease-out;
+      }
+      #boot img {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        animation: boot-pulse 1.5s ease-in-out 0.3s infinite;
+      }
+      #boot .boot-label {
+        font:
+          500 13px/1 system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+        letter-spacing: 0.02em;
+        color: rgba(0, 0, 0, 0.45);
+      }
+      html[data-theme='dark'] #boot .boot-label {
+        color: rgba(255, 255, 255, 0.54);
+      }
+      #boot.boot-done {
+        opacity: 0;
+        pointer-events: none;
+      }
+      /* 启动失败后的兜底：外壳还在说明 JS 没跑起来，允许用户点击重试。 */
+      #boot.boot-failed {
+        cursor: pointer;
+      }
+      #boot.boot-failed img {
+        animation: none;
+        opacity: 0.5;
+      }
+      #boot.boot-failed .boot-label {
+        color: rgba(0, 0, 0, 0.75);
+        text-decoration: underline;
+      }
+      html[data-theme='dark'] #boot.boot-failed .boot-label {
+        color: rgba(255, 255, 255, 0.78);
+      }
+      #boot .boot-fallback {
+        display: none;
+        font:
+          500 13px/1.6 system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+        color: rgba(0, 0, 0, 0.45);
+        text-align: center;
+        padding: 0 24px;
+      }
+      html[data-theme='dark'] #boot .boot-fallback {
+        color: rgba(255, 255, 255, 0.54);
+      }
+      @keyframes boot-pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(0.9);
+          opacity: 0.72;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot img {
+          animation: none;
+        }
+      }
+    </style>
     <script>
       // 首屏防闪烁：在样式生效前就把主题写到 <html>，否则「深色」会先亮一下再变暗。
       // 与 src/theme.ts 共用 localStorage 键 sparkee.theme，逻辑保持等价。
@@ -37,7 +129,37 @@
     </script>
   </head>
   <body>
+    <noscript>
+      <style>
+        #boot .boot-label {
+          display: none;
+        }
+        #boot .boot-fallback {
+          display: block;
+        }
+      </style>
+    </noscript>
+    <div id="boot" role="status" aria-live="polite">
+      <img src="/favicon-v2.png" alt="" width="56" height="56" />
+      <span class="boot-label">正在加载…</span>
+      <span class="boot-fallback">需要启用 JavaScript 才能使用 Sparkee。</span>
+    </div>
     <div id="app"></div>
+    <script>
+      // 应用挂载后会移除 #boot；12 秒后还在，说明启动失败（脚本 404 / 缓存损坏 /
+      // 网络卡死），此时给用户一个手动重试的出口，而不是永远停在「正在加载…」。
+      setTimeout(function () {
+        var boot = document.getElementById('boot')
+        if (!boot) return
+        boot.className = 'boot-failed'
+        var label = boot.querySelector('.boot-label')
+        if (label) label.textContent = '加载失败，点此重试'
+        boot.addEventListener('click', function () {
+          if (label) label.textContent = '正在重试…'
+          location.reload()
+        })
+      }, 12000)
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
