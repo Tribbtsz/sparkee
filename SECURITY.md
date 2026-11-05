@@ -23,7 +23,8 @@
 - **一个共享口令**。所有 `/api/*`（`/api/health` 除外）都要求
   `Authorization: Bearer <SPARKEE_TOKEN>`。**拿到口令就等于拿到全部数据**，没有角色和权限区分。
   口令泄露后请立刻轮换：改 `secrets.env`，重新 `pnpm release -- --secrets-file secrets.env`。
-- **空口令 = 不鉴权**。这是本地开发的便利，不要这样部署到公网。
+- **未设置口令时只允许回环地址**。`localhost` / `127.0.0.1` / `::1` 之外一律 503；
+  线上部署仍然必须设置口令，这层默认拒绝只是兜底。
 - **口令存在浏览器 `localStorage`**，所以 XSS 会直接导致口令和全部笔记泄露。前端目前不渲染
   用户 HTML（纯文本 + 少量格式），请保持这一点：不要引入 `dangerouslySetInnerHTML`、
   也不要渲染第三方 HTML。

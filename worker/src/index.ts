@@ -82,7 +82,18 @@ app.get('/api/health', async (c) => {
 
 app.use('/api/*', async (c, next) => {
   const expected = (c.env.SPARKEE_TOKEN ?? '').trim()
-  if (expected === '') return next()
+  if (expected === '') {
+    // 没配口令时只放行本机回环（本地 cf dev / e2e）；线上默认拒绝，
+    // 避免实例一旦忘了设 secret 就变成任何人都能读写的公开接口。
+    if (isLoopback(new URL(c.req.url).hostname)) return next()
+    return c.json(
+      {
+        error:
+          'SPARKEE_TOKEN is not configured; this server denies non-loopback access until it is set',
+      },
+      503,
+    )
+  }
 
   const header = c.req.header('Authorization') ?? ''
   if (!header.toLowerCase().startsWith('bearer ')) {

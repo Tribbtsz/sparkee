@@ -194,32 +194,38 @@ export async function updateNote(
     .first<NoteRow>()
   if (!row) throw new NotFoundError('note not found')
 
-  const contentChanged = patch.content !== undefined && patch.content !== row.content
-  const pinnedChanged = patch.isPinned !== undefined && patch.isPinned !== (row.is_pinned === 1)
-  const archivedChanged = patch.archived !== undefined && patch.archived !== (row.archived === 1)
-
   const next: NoteRow = { ...row }
-  if (contentChanged) {
-    next.content = patch.content!
-    next.tags = extractTags(patch.content!).join(',')
+  // 只更新请求里点名要改的列：两台设备同时改不同字段时，后到的那次不会把前一次的改动写回旧值。
+  const sets: string[] = []
+  const args: Array<string | number> = []
+
+  if (patch.content !== undefined && patch.content !== row.content) {
+    next.content = patch.content
+    next.tags = extractTags(patch.content).join(',')
+    sets.push('content = ?', 'tags = ?')
+    args.push(next.content, next.tags)
   }
-  if (pinnedChanged) next.is_pinned = patch.isPinned ? 1 : 0
-  if (archivedChanged) next.archived = patch.archived ? 1 : 0
+  if (patch.isPinned !== undefined && patch.isPinned !== (row.is_pinned === 1)) {
+    next.is_pinned = patch.isPinned ? 1 : 0
+    sets.push('is_pinned = ?')
+    args.push(next.is_pinned)
+  }
+  if (patch.archived !== undefined && patch.archived !== (row.archived === 1)) {
+    next.archived = patch.archived ? 1 : 0
+    sets.push('archived = ?')
+    args.push(next.archived)
+  }
 
   // 没有任何字段真的变化：不写库、不动 updated_at ——
   // 否则卡片会因为"最后更新时间"变了而无端跳到列表最前。
-  if (!contentChanged && !pinnedChanged && !archivedChanged) {
-    return toNote(next)
-  }
+  if (sets.length === 0) return toNote(next)
 
   const now = nowIso()
+  sets.push('updated_at = ?')
+  args.push(now, id)
   await db
-    .prepare(
-      `UPDATE notes
-       SET content = ?, tags = ?, is_pinned = ?, archived = ?, updated_at = ?
-       WHERE id = ?`,
-    )
-    .bind(next.content, next.tags, next.is_pinned, next.archived, now, id)
+    .prepare(`UPDATE notes SET ${sets.join(', ')} WHERE id = ?`)
+    .bind(...args)
     .run()
 
   next.updated_at = now
@@ -374,21 +380,18 @@ export async function createTodo(
   folderId: number | null,
   content: string,
 ): Promise<Todo> {
-  if (folderId !== null) {
-    const exists = await db
-      .prepare('SELECT count(*) AS n FROM todo_folders WHERE id = ?')
-      .bind(folderId)
-      .first<{ n: number }>()
-    if (!exists || exists.n === 0) throw new BadRequestError('invalid folder')
-  }
-
   const now = nowIso()
+  // 校验和插入放在同一条语句里：先 SELECT 再 INSERT 的话，
+  // 两步之间文件夹被删掉就会留下孤立待办。
   const res = await db
     .prepare(
-      'INSERT INTO todos (folder_id, content, is_done, created_at, updated_at) VALUES (?, ?, 0, ?, ?)',
+      `INSERT INTO todos (folder_id, content, is_done, created_at, updated_at)
+       SELECT ?, ?, 0, ?, ?
+       WHERE ? IS NULL OR EXISTS (SELECT 1 FROM todo_folders WHERE id = ?)`,
     )
-    .bind(folderId, content, now, now)
+    .bind(folderId, content, now, now, folderId, folderId)
     .run()
+  if (res.meta.changes === 0) throw new BadRequestError('invalid folder')
 
   return {
     id: Number(res.meta.last_row_id),
@@ -413,20 +416,32 @@ export async function updateTodo(
     .first<TodoRow>()
   if (!row) throw new NotFoundError('todo not found')
 
-  const contentChanged = patch.content !== undefined && patch.content !== row.content
-  const doneChanged = patch.isDone !== undefined && patch.isDone !== (row.is_done === 1)
+  // 与 updateNote 同理：只写请求里出现的列，避免两台设备互相覆盖。
+  const sets: string[] = []
+  const args: Array<string | number> = []
+
+  if (patch.content !== undefined && patch.content !== row.content) {
+    sets.push('content = ?')
+    args.push(patch.content)
+  }
+  if (patch.isDone !== undefined && patch.isDone !== (row.is_done === 1)) {
+    sets.push('is_done = ?')
+    args.push(patch.isDone ? 1 : 0)
+  }
 
   // 没有实际变化：不写库、不动 updated_at。
-  if (!contentChanged && !doneChanged) return toTodo(row)
+  if (sets.length === 0) return toTodo(row)
 
-  const content = contentChanged ? patch.content! : row.content
-  const isDone = doneChanged ? (patch.isDone ? 1 : 0) : row.is_done
   const now = nowIso()
-
+  sets.push('updated_at = ?')
+  args.push(now, id)
   await db
-    .prepare('UPDATE todos SET content = ?, is_done = ?, updated_at = ? WHERE id = ?')
-    .bind(content, isDone, now, id)
+    .prepare(`UPDATE todos SET ${sets.join(', ')} WHERE id = ?`)
+    .bind(...args)
     .run()
+
+  const content = patch.content !== undefined ? patch.content : row.content
+  const isDone = patch.isDone !== undefined ? (patch.isDone ? 1 : 0) : row.is_done
 
   return {
     id: row.id,
