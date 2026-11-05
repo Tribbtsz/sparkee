@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact'
-import { Bolt, Checklist, FlashOn, Tag, Today, Tune, Archive } from '../icons'
+import { Checklist, FlashOn, Tag, Today, Tune, Archive } from '../icons'
 import type { ThemeMode } from '../theme'
 import { THEME_OPTIONS } from '../theme'
 import type { Stats, TagStat } from '../types'
@@ -52,12 +52,15 @@ export function Sidebar({
     <div class="flex h-full w-full flex-col bg-sidebar">
       {/* ---- 品牌区 ---- */}
       <div class="flex items-center gap-3 px-[22px] pt-[18px] pb-5">
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-btn bg-brand-bg text-brand-fg">
-          <Bolt size={24} />
-        </span>
+        <img
+          src="/icon-192-v2.png"
+          width={40}
+          height={40}
+          alt=""
+          class="h-10 w-10 shrink-0 rounded-btn"
+        />
         <span class="text-[18px] font-extrabold tracking-[-0.3px] text-ink">Sparkee</span>
       </div>
-      <div class="mx-[18px] border-t border-line" />
 
       {/* ---- 核心导航 ---- */}
       <nav class="flex flex-col gap-1 px-3 py-4">
@@ -81,7 +84,7 @@ export function Sidebar({
           selected={archiveSelected}
           onClick={() => onNav('archive')}
         />
-        <div class="my-1.5 border-t border-line" />
+        <div class="h-3" aria-hidden="true" />
         <NavItem
           icon={<Checklist size={21} />}
           title="待办本"

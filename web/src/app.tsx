@@ -159,13 +159,11 @@ export function App() {
       }
       setLoading(false)
       setSearchBusy(false)
-      toast(message)
-      // 首次打开时本地还没有口令 → 后端必然回 401。
-      // 这时直接把「服务器配置」弹出来并给一句中文提示，
-      // 免得用户只看到「未授权」的报错页，不知道下一步该干嘛。
       if (statusOf(e) === 401 && !getToken()) {
         setSettingsOpen(true)
         toast(`请输入访问密码（服务器：${getBaseUrl() || location.origin}）`)
+      } else {
+        toast(message)
       }
     } finally {
       // 进度条只认最新一次请求：旧请求先回来时不能把它提前收掉
@@ -474,7 +472,7 @@ export function App() {
                     </button>
                     <button
                       type="button"
-                      class="inline-flex cursor-pointer items-center gap-2 rounded-btn border border-line px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                      class="inline-flex cursor-pointer items-center gap-2 rounded-btn bg-surface-2 px-4 py-2.5 text-[14px] font-medium text-ink transition-colors hover:bg-line motion-reduce:transition-none"
                       onClick={() => setSettingsOpen(true)}
                     >
                       <Tune size={18} />

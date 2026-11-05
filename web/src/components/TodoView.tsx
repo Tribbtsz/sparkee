@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
+import { useCallback, useEffect, useId, useRef, useState } from 'preact/hooks'
 import type { TodoOrder, TodoSort } from '../api'
 import {
   createTodo,
@@ -14,6 +14,7 @@ import {
   Add,
   Check,
   Checklist,
+  ChevronRight,
   CreateNewFolder,
   Delete,
   Edit,
@@ -281,26 +282,11 @@ export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings 
 
         <div class="flex-1" />
 
-        <label
-          title="排序方式"
-          class="relative inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-capsule bg-surface-2 pr-1 pl-2.5 text-[13px] text-ink"
-        >
-          <Sort size={16} class="shrink-0 text-ink-2" />
-          <select
-            value={`${sort}:${order}`}
-            class="cursor-pointer appearance-none border-0 bg-transparent pr-1 text-[13px] text-ink outline-none"
-            onChange={(e) => changeSort(e.currentTarget.value)}
-          >
-            <option value="created:asc">创建时间 · 正序</option>
-            <option value="created:desc">创建时间 · 倒序</option>
-            <option value="updated:asc">修改时间 · 正序</option>
-            <option value="updated:desc">修改时间 · 倒序</option>
-          </select>
-        </label>
+        <TodoSortSelect value={`${sort}:${order}`} onChange={changeSort} />
       </header>
 
       {/* ---- 文件夹横条（项目隔离 + 新建） ---- */}
-      <div class="shrink-0 border-b border-line">
+      <div class="shrink-0">
         <div class="flex items-center gap-2 overflow-x-auto px-3 py-2.5 md:px-7">
           <FolderTab label="全部" selected={sel === 'all'} onClick={() => chooseFolder('all')} />
           <FolderTab
@@ -420,7 +406,7 @@ export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings 
             <button
               type="button"
               title="新建文件夹"
-              class="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-capsule border border-dashed border-line px-2.5 text-[13.5px] text-ink-2 hover:text-ink"
+              class="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-capsule px-2.5 text-[13.5px] text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink motion-reduce:transition-none"
               onClick={() => {
                 setNewName('')
                 setAdding(true)
@@ -477,7 +463,7 @@ export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings 
                   </button>
                   <button
                     type="button"
-                    class="inline-flex cursor-pointer items-center gap-2 rounded-btn border border-line px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                    class="inline-flex cursor-pointer items-center gap-2 rounded-btn bg-surface-2 px-4 py-2.5 text-[14px] font-medium text-ink transition-colors hover:bg-line motion-reduce:transition-none"
                     onClick={onOpenSettings}
                   >
                     <Tune size={18} />
@@ -558,6 +544,156 @@ export function TodoView({ refreshKey, onOpenSidebar, onChanged, onOpenSettings 
             )}
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+const SORT_OPTIONS = [
+  { value: 'created:asc', label: '创建时间 · 正序', hint: '最早创建的在前' },
+  { value: 'created:desc', label: '创建时间 · 倒序', hint: '最新创建的在前' },
+  { value: 'updated:asc', label: '修改时间 · 正序', hint: '最早修改的在前' },
+  { value: 'updated:desc', label: '修改时间 · 倒序', hint: '最近修改的在前' },
+] as const
+
+type SortValue = (typeof SORT_OPTIONS)[number]['value']
+
+function TodoSortSelect({
+  value,
+  onChange,
+}: {
+  value: SortValue
+  onChange: (value: SortValue) => void
+}) {
+  const id = useId()
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const selectedIndex = SORT_OPTIONS.findIndex((option) => option.value === value)
+  const [open, setOpen] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(selectedIndex)
+
+  useEffect(() => {
+    if (!open) return
+    function onOutsidePointer(e: PointerEvent) {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', onOutsidePointer)
+    return () => document.removeEventListener('pointerdown', onOutsidePointer)
+  }, [open])
+
+  function show() {
+    setActiveIndex(selectedIndex)
+    setOpen(true)
+  }
+
+  function choose(index: number) {
+    setOpen(false)
+    triggerRef.current?.focus()
+    const next = SORT_OPTIONS[index].value
+    if (next !== value) onChange(next)
+  }
+
+  return (
+    <div
+      ref={rootRef}
+      class="relative min-w-0"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false)
+      }}
+    >
+      <button
+        ref={triggerRef}
+        type="button"
+        role="combobox"
+        aria-label={`排序方式：${SORT_OPTIONS[selectedIndex].label}`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={id}
+        aria-activedescendant={open ? `${id}-${activeIndex}` : undefined}
+        title="排序方式"
+        class={cx(
+          'inline-flex h-9 w-full cursor-pointer items-center gap-1.5 rounded-capsule px-2.5 text-[13px] outline-none transition-[background-color,color,box-shadow,scale] duration-150 focus-visible:ring-2 focus-visible:ring-lime active:scale-[0.97] motion-reduce:transition-none',
+          open ? 'bg-lime-select text-lime-fg' : 'bg-surface-2 text-ink hover:bg-line',
+        )}
+        onClick={() => (open ? setOpen(false) : show())}
+        onKeyDown={(e) => {
+          if (e.isComposing) return
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault()
+            if (!open) show()
+            else {
+              const step = e.key === 'ArrowDown' ? 1 : -1
+              setActiveIndex((index) => (index + step + SORT_OPTIONS.length) % SORT_OPTIONS.length)
+            }
+          } else if (e.key === 'Home' || e.key === 'End') {
+            e.preventDefault()
+            setOpen(true)
+            setActiveIndex(e.key === 'Home' ? 0 : SORT_OPTIONS.length - 1)
+          } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            if (open) choose(activeIndex)
+            else show()
+          } else if (e.key === 'Escape' && open) {
+            e.preventDefault()
+            e.stopPropagation()
+            setOpen(false)
+          } else if (e.key === 'Tab') {
+            setOpen(false)
+          }
+        }}
+      >
+        <Sort size={16} class="shrink-0" />
+        <span class="truncate">{SORT_OPTIONS[selectedIndex].label}</span>
+        <ChevronRight
+          size={16}
+          class={cx(
+            'shrink-0 transition-transform duration-150 motion-reduce:transition-none',
+            open ? '-rotate-90' : 'rotate-90',
+          )}
+        />
+      </button>
+      <div
+        id={id}
+        role="listbox"
+        aria-label="排序方式"
+        aria-hidden={!open}
+        inert={!open}
+        class={cx(
+          'absolute top-full right-0 z-50 mt-2 w-60 max-w-[calc(100vw-24px)] origin-top-right rounded-card bg-surface p-1.5 shadow-dialog transition-[opacity,scale,translate,visibility] duration-150 ease-out motion-reduce:transition-none',
+          open
+            ? 'visible translate-y-0 scale-100 opacity-100'
+            : 'pointer-events-none invisible -translate-y-1 scale-[0.96] opacity-0',
+        )}
+      >
+        {SORT_OPTIONS.map((option, index) => (
+          <div
+            key={option.value}
+            id={`${id}-${index}`}
+            role="option"
+            aria-selected={option.value === value}
+            aria-label={option.label}
+            aria-describedby={`${id}-${index}-hint`}
+            class={cx(
+              'flex min-h-14 cursor-pointer items-center gap-3 rounded-btn px-3 py-2 transition-colors duration-150 motion-reduce:transition-none',
+              option.value === value
+                ? 'bg-lime-select text-lime-fg'
+                : activeIndex === index
+                  ? 'bg-surface-2 text-ink'
+                  : 'text-ink hover:bg-surface-2',
+            )}
+            onPointerMove={() => setActiveIndex(index)}
+            onPointerDown={(e) => e.preventDefault()}
+            onClick={() => choose(index)}
+          >
+            <span class="min-w-0 flex-1">
+              <span class="block text-[13px] font-medium">{option.label}</span>
+              <span id={`${id}-${index}-hint`} class="mt-0.5 block text-[11px] text-ink-2">
+                {option.hint}
+              </span>
+            </span>
+            {option.value === value && <Check size={18} class="shrink-0" />}
+          </div>
+        ))}
       </div>
     </div>
   )

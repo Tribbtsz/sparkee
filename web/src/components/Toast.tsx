@@ -48,7 +48,7 @@ export function ToastHost() {
         <div
           key={t.id}
           role="alert"
-          class="toast-enter pointer-events-auto max-w-[min(560px,100%)] rounded-btn bg-ink px-4 py-2.5 text-[13px] leading-relaxed break-words text-scaffold shadow-dialog"
+          class="toast-enter pointer-events-auto max-w-[min(560px,100%)] rounded-btn bg-surface px-4 py-2.5 text-[13px] leading-relaxed break-words text-ink shadow-dialog"
         >
           {t.message}
         </div>

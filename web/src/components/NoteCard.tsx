@@ -199,7 +199,7 @@ export function NoteCard(props: Props) {
           </div>
         </div>
 
-        <div class="my-2.5 border-t border-line" />
+        <div class="h-5" aria-hidden="true" />
 
         {/* ---- 内容区：双击才进编辑 ---- */}
         <div
@@ -250,10 +250,9 @@ export function NoteCard(props: Props) {
             )
           )}
 
-          {/* ---- 标签行：最下方，与正文之间一条细分割线 ---- */}
           {(tags.length > 0 || editing) && (
             <>
-              <div class="my-2.5 border-t border-line" />
+              <div class="h-5" aria-hidden="true" />
               <TagRow
                 tags={tags}
                 editing={editing}

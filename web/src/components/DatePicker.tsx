@@ -328,7 +328,7 @@ export function DatePicker({ value, anchorRef, onPick, onClear, onClose }: Props
         )}
 
         {/* ---- 底部：当前选择 + 清除 / 完成 ---- */}
-        <div class="mt-2.5 flex items-center gap-2 border-t border-line pt-2.5">
+        <div class="mt-2.5 flex items-center gap-2 pt-2.5">
           <span class="min-w-0 flex-1 truncate text-[12px] text-ink-2">
             {value === null ? '未选择日期' : `已选 ${value}`}
           </span>

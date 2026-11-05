@@ -101,7 +101,7 @@ export function SettingsDialog({ onClose, onSaved }: Props) {
             autocorrect="off"
             spellcheck={false}
             aria-invalid={urlError !== null}
-            class="h-11 w-full rounded-btn border border-line bg-transparent px-3 text-[15px] text-ink outline-none focus:border-lime"
+            class="h-11 w-full rounded-btn border-0 bg-surface-2 px-3 text-[15px] text-ink outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-lime motion-reduce:transition-none"
             onInput={(e) => {
               setUrl(e.currentTarget.value)
               setUrlError(null)
@@ -123,7 +123,7 @@ export function SettingsDialog({ onClose, onSaved }: Props) {
                   autocomplete="off"
                   autocapitalize="off"
                   spellcheck={false}
-                  class="h-11 w-full rounded-btn border border-line bg-transparent px-3 text-[15px] text-ink outline-none focus:border-lime"
+                  class="h-11 w-full rounded-btn border-0 bg-surface-2 px-3 text-[15px] text-ink outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-lime motion-reduce:transition-none"
                   onInput={(e) => {
                     setTokenValue(e.currentTarget.value)
                     setTestState('idle')
@@ -136,7 +136,7 @@ export function SettingsDialog({ onClose, onSaved }: Props) {
                   }}
                 />
               ) : (
-                <div class="flex h-11 items-center rounded-btn border border-line px-3 text-[15px] tracking-[2px] text-ink-2">
+                <div class="flex h-11 items-center rounded-btn bg-surface-2 px-3 text-[15px] tracking-[2px] text-ink-2">
                   {token ? '••••••••' : '未设置'}
                 </div>
               )}
