@@ -6,8 +6,10 @@ import type { Note, Stats, TagStat, Todo, TodoFolder } from './types'
  * 地址策略：
  *   1. localStorage 里用户在「服务器配置」填的地址（可选，用于本地开发或 CORS
  *      已放行当前来源的实例；Worker 默认只放行同源与本机回环）；
- *   2. 默认保持「同源」——相对路径 `/api/...`。开发时由 Vite 把 /api 代理到 8787
- *      （cf dev），生产时由 Workers Assets 托管，两边都天然同源、无 CORS。
+ *   2. 网页默认保持「同源」——相对路径 `/api/...`。开发时由 Vite 把 /api 代理到
+ *      8787（cf dev），生产时由 Workers Assets 托管，两边都天然同源、无 CORS；
+ *   3. 原生壳（Capacitor）的页面来自 APK 本地的 `https://localhost`，没有同源后端，
+ *      所以默认直连线上 Worker（其 CORS 已放行 `https://localhost`）。
  *
  * 鉴权：localStorage 里的 token 非空才带 `Authorization: Bearer <token>`。
  * 口令不写死在代码里，由用户在 App 内手填。
@@ -84,9 +86,22 @@ export function validateBaseUrl(raw: string): string | null {
   }
 }
 
-/** 没配过地址时的兜底：同源相对路径。 */
+/** 原生壳的页面打不开同源 API，默认直连线上 Worker。 */
+const NATIVE_BASE_URL = 'https://sparkee.z0z.fun'
+
+interface CapacitorGlobal {
+  isNativePlatform?: () => boolean
+}
+
+/** Capacitor 原生壳（Android / iOS），网页端为 false。 */
+export function isNativeApp(): boolean {
+  const cap = (globalThis as { Capacitor?: CapacitorGlobal }).Capacitor
+  return typeof cap?.isNativePlatform === 'function' && cap.isNativePlatform()
+}
+
+/** 没配过地址时的兜底：网页走同源相对路径，原生壳走线上 Worker。 */
 function defaultBaseUrl(): string {
-  return ''
+  return isNativeApp() ? NATIVE_BASE_URL : ''
 }
 
 export function getBaseUrl(): string {
