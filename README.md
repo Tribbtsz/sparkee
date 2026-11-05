@@ -85,7 +85,7 @@ pnpm dev                        # http://localhost:5173，/api 代理到 8787
 
 | 变量 | 用在哪 | 说明 |
 | --- | --- | --- |
-| `SPARKEE_TOKEN` | Worker secret | 访问口令；留空 = 不鉴权，只适合本地 |
+| `SPARKEE_TOKEN` | Worker secret | 访问口令；未设置时只允许本机回环地址访问，线上必须设置 |
 | `CLOUDFLARE_ACCOUNT_ID` | 部署命令 | 可选；不填时 `cf` 用当前登录账号 |
 | `SPARKEE_D1_ID` | 部署命令 | 远程 D1 的 UUID；本地默认用占位 ID |
 | `SPARKEE_DOMAIN` | 部署命令 | 自定义域名；不填则只部署到 `*.workers.dev` |
@@ -120,8 +120,10 @@ Workers & Pages → 选中 `sparkee` → Settings → **Builds** → Connect Git
 | Deploy command | `pnpm run deploy` |
 | Preview command | `pnpm run preview` |
 
-构建配置里还要给两个变量（值在本机 `worker/.env`）：`SPARKEE_D1_ID`、
-`SPARKEE_DOMAIN`。`SPARKEE_TOKEN` 可不给——`cf deploy` 会沿用线上已有的 secret。
+构建配置里要给三个变量（值在本机 `worker/.env` / `worker/secrets.env`）：
+`SPARKEE_D1_ID`、`SPARKEE_DOMAIN`、`SPARKEE_TOKEN`。`SPARKEE_TOKEN` 必须给：
+`pnpm run deploy` 会把它写进 `worker/secrets.env` 再随版本上传，缺失时部署会直接失败
+（`cf deploy` 不会自动沿用线上 secret）。填的值应与线上当前口令一致，否则相当于换密码。
 
 ### 本机手动部署
 
@@ -165,6 +167,8 @@ pnpm run deploy
 ## API
 
 所有 `/api/*` 需要 `Authorization: Bearer <SPARKEE_TOKEN>`，`/api/health` 除外。
+未设置口令时，只有 `localhost` / `127.0.0.1` / `::1` 的请求被放行；其余来源返回 503，
+避免线上实例忘记配置 secret 就变成公开读写接口。
 
 ```text
 GET    /api/health
@@ -188,6 +192,9 @@ DELETE /api/todos/{id}
 浏览器时区偏移 `tz`（分钟，东为正），后端换算成 UTC 的 `[当天 00:00, 次日 00:00)`。
 
 ## 备份
+
+应用内也有一份轻量导出：**服务器设置 → 导出备份**，把当前实例的闪念（含归档）、
+待办文件夹和待办完整下载成 JSON（不含访问口令），适合换实例或本地留档。
 
 D1 自带 **Time Travel**，保留最近 30 天：
 
