@@ -50,7 +50,8 @@ Object.defineProperty(globalThis, 'localStorage', {
 })
 
 const api = await import('../src/api.ts')
-const { formatTime, tagsOf, bodyOf, removeTag, appendTag } = await import('../src/util.ts')
+const { formatTime, tagsOf, bodyOf, removeTag, appendTag, stripSubmitted } =
+  await import('../src/util.ts')
 
 let passed = 0
 const failures: string[] = []
@@ -89,6 +90,9 @@ eq('bodyOf 剥离标签', bodyOf('#a 你好  世界\n#b '), '你好 世界')
 eq('removeTag 不误伤更长标签', removeTag('#工作内容 和 #工作 都要', '工作'), '#工作内容 和 都要')
 eq('appendTag 追加到末尾', appendTag('正文', '  #灵感 '), '正文 #灵感 ')
 eq('appendTag 非法输入不写入', appendTag('正文', '   '), '正文')
+eq('stripSubmitted 保留保存期间的新输入', stripSubmitted('已提交新输入', '已提交'), '新输入')
+eq('stripSubmitted 接受用户改写后的内容', stripSubmitted('完全替换', '已提交'), '完全替换')
+eq('stripSubmitted 空输入保持不变', stripSubmitted('', '已提交'), '')
 check('formatTime 刚刚', formatTime(new Date().toISOString()) === '刚刚')
 check(
   'formatTime 分钟前',
@@ -213,6 +217,17 @@ check('归档中的标签不进 /api/tags', !tagsWhileArchived.some((t) => t.nam
 
 const restored = await api.updateNote(created.id, { archived: false })
 eq('archived=false', restored.archived, false)
+
+// 局部更新回归：两个请求同时改不同字段，不能互相覆盖。
+await api.updateNote(created.id, { is_pinned: false })
+const raceContent = `E2E 并发内容 #${marker}`
+await Promise.all([
+  api.updateNote(created.id, { content: raceContent }),
+  api.updateNote(created.id, { is_pinned: true }),
+])
+const merged = (await api.fetchNotes({})).find((n) => n.id === created.id)
+eq('并发更新后 content 保留', merged?.content, raceContent)
+eq('并发更新后 is_pinned 保留', merged?.is_pinned, true)
 const tagsAfterRestore = await api.fetchTags()
 const tagEntry = tagsAfterRestore.find((t) => t.name === marker.toLowerCase())
 check('/api/tags 里出现该标签且 count>=1', !!tagEntry && tagEntry.count >= 1, tagEntry)
@@ -311,6 +326,11 @@ const todoStats = await api.fetchStats()
 check('stats.todos_open 计入未完成待办', todoStats.todos_open >= 2, todoStats.todos_open)
 
 await expectMessage('创建空白待办 → 400', () => api.createTodo('   ', null), '创建待办失败 400')
+await expectMessage(
+  '不存在的文件夹 → 400（不会留下孤立待办）',
+  () => api.createTodo('不该存在', 99999999),
+  '创建待办失败 400',
+)
 await expectMessage('空白文件夹名 → 400', () => api.createTodoFolder('  '), '创建文件夹失败 400')
 await expectMessage(
   '更新不存在的待办 → 404',
