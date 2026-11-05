@@ -130,8 +130,8 @@ export function SettingsDialog({ onClose, onSaved }: Props) {
         <h2 class="m-0 text-[18px] font-semibold text-ink">服务器配置</h2>
 
         <p class="mt-3 mb-0 text-[14px] leading-relaxed text-ink-2">
-          默认走同源，不需要填；本地开发可填 http://127.0.0.1:8787（cf dev）。
-          目标服务器需在 CORS 中放行当前站点来源（同源和本机回环地址默认可用），否则请求会被浏览器拦下。
+          默认走同源，不需要填；本地开发可填 http://127.0.0.1:8787（cf dev）。 目标服务器需在 CORS
+          中放行当前站点来源（同源和本机回环地址默认可用），否则请求会被浏览器拦下。
           切换地址会清空当前列表并重新加载，避免把旧数据写到新实例。
         </p>
 
