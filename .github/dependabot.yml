@@ -46,6 +46,8 @@ updates:
         update-types: ['version-update:semver-major']
       # 部署 CLI 固定版本：升级后要本机跑一遍 deploy 验证，不自动跟进。
       - dependency-name: cf
+      # 4.163 起本地 D1 状态目录改为 .cloudflare/state，升级需同步迁移脚本和文档。
+      - dependency-name: wrangler
 
   - package-ecosystem: github-actions
     directory: /

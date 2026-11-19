@@ -16,14 +16,14 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "cf dev -- --persist-to .wrangler/state",
+    "dev": "cf dev",
     "build": "cf build",
     "release": "cf deploy",
     "typecheck": "cf workers types && tsc --noEmit",
     "db:migrate:local": "cf d1 migrations apply 11111111-1111-4111-8111-111111111111 --dir migrations --local --persist-to .wrangler/state"
   },
   "dependencies": {
-    "hono": "^4.13.13"
+    "hono": "^4.13.19"
   },
   "devDependencies": {
     "cf": "1.0.0-beta.26",
