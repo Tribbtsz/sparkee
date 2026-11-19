@@ -81,7 +81,7 @@ pnpm dev                        # http://localhost:5173，/api 代理到 8787
 
 ## 环境变量
 
-仓库里不写死任何真实域名、账号或数据库 ID。
+当前代码不写死访问口令、Cloudflare 账号 ID、D1 UUID 或线上域名；实例相关的值都走环境变量或构建变量。
 
 | 变量 | 用在哪 | 说明 |
 | --- | --- | --- |
@@ -89,8 +89,9 @@ pnpm dev                        # http://localhost:5173，/api 代理到 8787
 | `CLOUDFLARE_ACCOUNT_ID` | 部署命令 | 可选；不填时 `cf` 用当前登录账号 |
 | `SPARKEE_D1_ID` | 部署命令 | 远程 D1 的 UUID；本地默认用占位 ID |
 | `SPARKEE_DOMAIN` | 部署命令 | 自定义域名；不填则只部署到 `*.workers.dev` |
+| `VITE_NATIVE_BASE_URL` | 原生壳构建 | 可选；App 的默认 API 地址，不填则需在 App 内手动配置 |
 
-`cloudflare.config.ts` 只读这些环境变量，仓库里没有任何真实值。fork 之后填自己的：
+`cloudflare.config.ts` 只读这些环境变量，源码里没有真实值。fork 之后填自己的：
 
 ```bash
 # 在仓库根目录执行

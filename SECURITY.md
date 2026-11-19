@@ -28,8 +28,9 @@
 - **口令存在浏览器 `localStorage`**，所以 XSS 会直接导致口令和全部笔记泄露。前端目前不渲染
   用户 HTML（纯文本 + 少量格式），请保持这一点：不要引入 `dangerouslySetInnerHTML`、
   也不要渲染第三方 HTML。
-- **仓库里不放任何真实值**。账号 ID、D1 UUID、自定义域名放本地的 `worker/.env`（已 gitignore）；
-  线上口令用 `--secrets-file` 随版本上传，不进仓库、不进日志。
+- **当前代码不写死真实值**。账号 ID、D1 UUID、自定义域名放本地的 `worker/.env`（已 gitignore）；
+  原生壳的默认 API 地址由构建变量 `VITE_NATIVE_BASE_URL` 注入；线上口令用 `--secrets-file`
+  随版本上传，不进仓库、不进日志。
 - **依赖**。Dependabot 会提 PR，合并前跑一遍 CI；安全相关的升级优先处理。
 
 ## 部署自查

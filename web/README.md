@@ -43,6 +43,9 @@ pnpm exec tsc --noEmit -p tsconfig.app.json   # 只做类型检查
 - `localStorage.sparkee_server_url`（留空 = 同源）
 - `localStorage.sparkee_server_token`
 
+原生壳构建时用 `VITE_NATIVE_BASE_URL=https://your-worker.example.com pnpm build`
+注入 App 的默认 API 地址；不注入则留空，需要在 App 内手动配置。
+
 「测试连接」会用输入值请求 `/api/stats`，不会先写 localStorage。
 
 ## 主题
