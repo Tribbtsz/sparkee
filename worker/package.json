@@ -16,7 +16,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "cf dev",
+    "dev": "cf dev -- --persist-to .wrangler/state",
     "build": "cf build",
     "release": "cf deploy",
     "typecheck": "cf workers types && tsc --noEmit",
