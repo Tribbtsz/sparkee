@@ -1,6 +1,17 @@
 version: 2
 
 updates:
+  # 根目录：ESLint / Prettier 工具链
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      tooling:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
+
   # 前端：preact + 构建工具链
   - package-ecosystem: npm
     directory: /web
@@ -11,6 +22,14 @@ updates:
       web:
         patterns: ['*']
         update-types: ['minor', 'patch']
+    # 大版本单独评估，避免 preact 11 / TypeScript 7 这类 PR 长期堆积。
+    ignore:
+      - dependency-name: preact
+        update-types: ['version-update:semver-major']
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
 
   # 后端：hono + cf / wrangler / typescript
   - package-ecosystem: npm
@@ -22,6 +41,9 @@ updates:
       worker:
         patterns: ['*']
         update-types: ['minor', 'patch']
+    ignore:
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
