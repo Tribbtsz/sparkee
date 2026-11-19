@@ -44,6 +44,8 @@ updates:
     ignore:
       - dependency-name: typescript
         update-types: ['version-update:semver-major']
+      # 部署 CLI 固定版本：升级后要本机跑一遍 deploy 验证，不自动跟进。
+      - dependency-name: cf
 
   - package-ecosystem: github-actions
     directory: /
