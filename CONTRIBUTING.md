@@ -11,7 +11,7 @@
 
 ## 本地跑起来
 
-完整步骤见 README 的「本地开发」，最短路径：
+完整步骤见 README 的「快速开始」，最短路径：
 
 ```bash
 cd web && pnpm install && pnpm build
