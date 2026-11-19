@@ -87,8 +87,17 @@ export function validateBaseUrl(raw: string): string | null {
   }
 }
 
-/** 原生壳构建时注入的默认 API 地址；网页端不读取，未注入时为空。 */
-const NATIVE_BASE_URL = (import.meta.env.VITE_NATIVE_BASE_URL ?? '').trim()
+/**
+ * 原生壳构建时注入的默认 API 地址；网页端不读取，未注入时为空。
+ * e2e 在 Node 里直接 import 本模块，没有 Vite 的 import.meta.env，兜底为空。
+ */
+const NATIVE_BASE_URL = (() => {
+  try {
+    return (import.meta.env.VITE_NATIVE_BASE_URL ?? '').trim()
+  } catch {
+    return ''
+  }
+})()
 
 interface CapacitorGlobal {
   isNativePlatform?: () => boolean
