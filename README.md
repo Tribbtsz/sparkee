@@ -246,4 +246,4 @@ CI 用 `cf dev` + 本地 D1 跑同一套，不需要 Cloudflare 凭据。
 
 ## License
 
-[MIT](LICENSE) © Sparkee contributors
+[MIT](LICENSE) © 2026 Tribbtsz
